@@ -1,0 +1,72 @@
+project:
+  type: website
+  output-dir: docs
+  preview:
+    port: 7771
+    browser: false  
+  resources:
+    - "data/*.mp3"
+    - "data/*.wav"
+    - "data/LibriSpeech/*.mp3"
+
+  render:
+    - "*.qmd"
+    - "!*.Rmd"
+    - "!data/old/*.qmd"
+
+lang: ko
+date-format: "YYYY년 MM월 DD일"
+
+
+website:
+  title: "선거지형"
+  favicon: "assets/android-chrome-192x192.png"
+  google-analytics: "UA-229551680-1"
+  search:
+    location: navbar
+    type: overlay
+  sidebar:
+    style: "docked"
+    search: true
+    contents:
+      - index.qmd    
+      - section: "인구통계"
+        contents:
+          - demographics.qmd
+
+  page-footer:
+    center: |
+      더불어 민주당
+    background: "#2780e3"
+
+format:
+  html:
+    theme:
+      light: flatly
+      dark: darkly
+    css: assets/quarto.css
+    code-link: true
+    code-fold: show
+    code-tools: true
+    code-block-bg: "white"
+    code-block-border-left: "#31BAE9"
+    highlight-style: github
+    toc: true
+    mermaid-format: png
+    # fig-width: 8 #https://quarto.org/docs/computations/execution-options.html#figure-options
+    # fig-height: 6
+    mermaid:
+      theme: neutral # https://quarto.org/docs/authoring/diagrams.html#mermaid-theming
+    
+
+
+bibliography: assets/references.bib
+csl: assets/apa-single-spaced.csl
+link-citations: true
+
+execute:
+  freeze: auto
+
+editor_options: 
+  chunk_output_type: console  
+          

@@ -1,0 +1,10 @@
+---
+editor: 
+  markdown: 
+    wrap: 72
+---
+
+# 인구통계
+
+
+
