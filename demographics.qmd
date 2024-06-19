@@ -2,9 +2,146 @@
 editor: 
   markdown: 
     wrap: 72
+editor_options: 
+  chunk_output_type: console
 ---
 
 # 인구통계
+
+> 데이터 출처: [KOSIS API](https://kosis.kr/openapi/)
+
+```{r}
+library(tidyverse)
+library(kosis)
+library(reactable)
+
+# get stat list
+# getStatList(vwCd = "MT_ZTITLE")
+# getStatList(vwCd = "MT_ZTITLE", parentListId = "A")
+# getStatList(vwCd = "MT_ZTITLE", parentListId = "A_7")
+
+demo_raw <- getStatData(orgId = "101", tblId = "DT_1B040A3") |> 
+  as_tibble()
+
+sido_codes <- demo_raw |> 
+  select(C1, C1_NM, ITM_NM, PRD_DE, 인구수=DT) |> 
+  mutate(구분자 = str_length(C1)) |> 
+  filter(구분자 == 2) |> 
+  count(C1, C1_NM) |> 
+  select(C0 = C1, C0_NM = C1_NM)
+
+demo_sgg_tbl <- demo_raw |> 
+  select(C1, C1_NM, ITM_NM, PRD_DE, 인구수=DT)  |> 
+  mutate(구분자 = str_length(C1)) |> 
+  filter(구분자 != 2) |> 
+  mutate(C0 = str_sub(C1, 1, 2)) |> 
+  left_join(sido_codes, by = "C0") |> 
+  filter(ITM_NM != "총인구수") |>
+  mutate(성별 = if_else(str_detect(ITM_NM, "남자"), "남자", "여자")) |> 
+  select(C0, C0_NM, C1, C1_NM, 성별, 연도 = PRD_DE, 인구수)
+
+  
+demo_sgg_tbl |> 
+  pivot_wider(names_from = 성별, values_from = 인구수, values_fn = as.numeric) |>
+  mutate(총인구 = 남자 + 여자) |>
+  select(시도 = C0_NM, 시군구 = C1_NM, 연도, 남자, 여자, 총인구) |> 
+  reactable(
+      searchable = TRUE,
+      filterable = TRUE,
+      defaultColDef = colDef(
+        header = function(value) gsub(".", " ", value, fixed = TRUE),
+        align = "center",
+        minWidth = 30,
+        headerStyle = list(background = "#f7f7f8")
+      ),
+      columns = list(
+        채널 = colDef(show = FALSE),
+        정당 = colDef(
+          cell = function(value) {
+            htmltools::img(src = value, height = 30, width = 30)
+          },
+          width = 60,
+          align = "center"
+        ),
+        총인구 = colDef(format = colFormat(separators = TRUE,  digits = 0)),
+        남자   = colDef(format = colFormat(separators = TRUE,  digits = 0)),
+        여자   = colDef(format = colFormat(separators = TRUE,  digits = 0)),
+        연도   = colDef(format = colFormat(separators = TRUE,  digits = 0))
+      ),
+      bordered = TRUE,
+      highlight = TRUE    
+  )
+
+```
+
+
+# 지도
+
+2023년 기준 시군구별 인구수를 지도에 표시합니다.
+
+```{r}
+#| column: screen
+#| fig-height: 12
+
+library(bitSpatial)
+library(leaflet)
+library(scales)
+
+admi <- bitSpatial::admi |> 
+  mutate(mega_cd = if_else(mega_cd == "45", "52", mega_cd),
+         mega_nm = if_else(mega_nm == "전라북도", "전북특별자치도", mega_nm)) |> 
+  # filter(str_detect(mega_nm, "전북")) |> 
+  mutate(cty_cd = if_else(str_sub(cty_cd,1,2) == "45", 
+                          str_glue("52{str_sub(cty_cd,3,5)}"), cty_cd)) |> 
+  group_by(mega_cd, mega_nm, cty_cd, cty_nm) |>
+  summarise(geometry = st_union(geometry))   
+
+sido_polygon_sf <- admi |> 
+  group_by(mega_nm) |>
+  summarise(geometry = st_union(geometry))
+
+demo_sgg_sf <- demo_sgg_tbl |> 
+  pivot_wider(names_from = 성별, values_from = 인구수, values_fn = as.numeric) |>
+  mutate(총인구 = 남자 + 여자) |>
+  select(C0, C1, 시도 = C0_NM, 시군구 = C1_NM, 연도, 남자, 여자, 총인구) |> 
+  filter(연도 == max(연도)) |> 
+  right_join(admi, by = c("C0" = "mega_cd", "C1" = "cty_cd")) |> 
+  st_as_sf()  # Add this line to convert to sf object
+
+demo_sgg_sf |> 
+  leaflet() |>
+    addTiles() |>
+    # 시도 폴리곤을 추가
+    addPolygons(data = sido_polygon_sf, 
+                fillColor = "transparent",
+                color = "blue",
+                weight = 5,
+                popup = ~mega_nm) |> 
+    # 시군구 폴리곤을 색상을 총인구로 지정
+    addPolygons(
+      fillColor = ~colorNumeric(palette = "YlOrRd", domain = 총인구)(총인구),
+      fillOpacity = 0.5,
+      color = "black",
+      weight = 1,
+      popup = ~paste0("<h4>", 시도, ", ", 시군구, "</h4>", 
+                      "총인구: ", comma(총인구), "명<br>",
+                      "ㄴ남자: ", comma(남자), "명<br>",
+                      "ㄴ여자: ", comma(여자), "명<br>"),
+      # 마우스 오버 시 폴리곤 강조 효과 설정
+      highlightOptions = highlightOptions(
+        color = "red",  # 강조 시 테두리 색상
+        weight = 3,  # 강조 시 테두리 두께
+        bringToFront = TRUE  # 강조된 폴리곤을 앞으로 가져오기
+      )
+    )  |> 
+    # 색상 범례 추가
+    addLegend(pal = colorNumeric(palette = "YlOrRd", domain = demo_sgg_sf$총인구), 
+              values = ~총인구, 
+              title = "총인구", 
+              position = "bottomright")
+
+```
+
 
 
 

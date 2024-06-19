@@ -67,6 +67,17 @@ link-citations: true
 execute:
   freeze: auto
 
+knitr:
+  opts_chunk:
+    message: false
+    warning: false
+    collapse: true
+    echo: false
+    code-overflow: code-overflow
+    fig-crop: false
+    comment: "#>"
+    R.options:
+      knitr.graphics.auto_pdf: true
 editor_options: 
   chunk_output_type: console  
           
