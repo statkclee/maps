@@ -108,7 +108,7 @@ saveWidget(precinct_m, file="data/precinct_m.html")
 
 ```
 
-:::{.column-page}
+:::{.column-body-outset}
 
 <iframe src="data/precinct_m.html" width="120%" height="800px"></iframe>
 
