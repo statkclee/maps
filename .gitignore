@@ -4,6 +4,7 @@
 .Ruserdata
 
 /.quarto/
-data/
+data/maps/
 code/
+data/예비후보_선거사무소_위경도.csv
 
