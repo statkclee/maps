@@ -33,6 +33,10 @@ website:
       - section: "인구통계"
         contents:
           - demographics.qmd
+      - section: "총선"
+        contents:
+          - office.qmd
+          - parliamentary.qmd
 
   page-footer:
     center: |

@@ -1,0 +1,80 @@
+---
+editor: 
+  markdown: 
+    wrap: 72
+editor_options: 
+  chunk_output_type: console
+---
+
+# 예비후보 선거사무소
+
+> 제22대 총선 중앙선거관리위원회 예비후보 선거사무소 위치 데이터를 활용하여 지도에 시각화합니다.
+
+```{r}
+#| message: false
+#| warning: false
+#| results: "hide"
+
+library(leaflet)
+library(sf)
+library(tidyverse)
+sf_use_s2(FALSE)
+
+precinct_sf <- st_read("data/maps/2024_22_Elec_simplify.json")
+# 지오메트리 유효화
+precinct_sf <- st_make_valid(precinct_sf)
+
+# 시도별 폴리곤 데이터 준비
+sido_sf <- precinct_sf %>%
+  group_by(SIDO) %>%
+  summarise(geometry = st_union(geometry))
+
+# 정당별 마커 설정
+office_location_tbl <- 
+  read_csv("data/예비후보_선거사무소_위경도.csv") 
+
+```
+
+
+
+```{r}
+#| column: screen
+#| fig-height: 12
+
+# 정당별로 다른 아이콘 설정
+icons <- awesomeIcons(
+  icon = 'ios-close',
+  iconColor = 'black',
+  library = 'ion',
+  markerColor = case_when(
+    office_location_tbl$정당명 == "더불어민주당" ~ "blue",
+    office_location_tbl$정당명 == "국민의힘" ~ "red",
+    office_location_tbl$정당명 == "새로운미래" ~ "green",
+    office_location_tbl$정당명 == "개혁신당" ~ "gray50",
+    office_location_tbl$정당명 == "진보당" ~ "gray30",
+    office_location_tbl$정당명 == "무소속" ~ "black"
+  )
+)
+
+
+
+office_location_tbl |> 
+  leaflet() %>%
+  addTiles() %>%  # 기본 타일 추가
+  addAwesomeMarkers(~경도, ~위도, icon = icons, 
+                    clusterOptions = markerClusterOptions(),
+                    popup = ~ as.character(paste0("<strong>", paste0("선거구명: ", `선거구명`), "</strong><br>",
+                                                  "-----------------------------------------------------------<br>",
+                                                  "&middot; 정당명: ", 정당명, "<br>",
+                                                  "&middot; 후보자: ", 후보자, "<br>"))) |> 
+  addPolygons(data = sido_sf, opacity = 1.0, fillOpacity = 0,
+              color = "black", weight = 3) |>
+  addPolygons(data = precinct_sf, opacity = 1.0, fillOpacity = 0.1,
+              color = "black", weight = 1,
+              highlightOptions = highlightOptions(color = "red", weight = 3, bringToFront = TRUE),
+              label = ~SIDO_SGG,
+              labelOptions = labelOptions(
+                style = list("font-weight" = "normal", padding = "3px 8px"),
+                textsize = "15px",
+                direction = "auto"))
+```
