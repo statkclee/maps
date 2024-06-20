@@ -36,6 +36,7 @@ website:
       - section: "총선"
         contents:
           - office.qmd
+          - precinct.qmd
           - parliamentary.qmd
 
   page-footer:
@@ -69,7 +70,7 @@ csl: assets/apa-single-spaced.csl
 link-citations: true
 
 execute:
-  freeze: auto
+  freeze: false
 
 knitr:
   opts_chunk:
@@ -77,7 +78,7 @@ knitr:
     warning: false
     collapse: true
     echo: false
-    code-overflow: code-overflow
+    # code-overflow: code-overflow
     fig-crop: false
     comment: "#>"
     R.options:

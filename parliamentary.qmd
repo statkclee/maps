@@ -8,4 +8,50 @@ editor_options:
 
 # 총선
 
+```{r}
+#| message: false
+#| warning: false
+#| results: "hide"
+#| eval: false
+
+library(leaflet)
+library(sf)
+library(tidyverse)
+sf_use_s2(FALSE)
+
+## 제19대 ------------------------------
+precinct_19_sf <- st_read("data/maps/국토정보공사_선거구/TL_NATI_ELECTION.shp") |> 
+  st_make_valid() %>%
+  st_transform(crs = 4326)
+
+# 시도별 폴리곤 데이터 준
+precinct_19_sido_sf <- precinct_19_sf %>%
+  group_by(CTP_KOR_NM) %>%
+  summarise(geometry = st_union(geometry))
+
+## 제21대 ------------------------------
+precinct_21_sf <- st_read("data/maps/2020_21_elec_253_simple.json") |> 
+  st_make_valid() %>%
+  st_transform(crs = 4326)
+
+
+# 시도별 폴리곤 데이터 준비
+precinct_21_sido_sf <- precinct_21_sf %>%
+  group_by(SIDO) %>%
+  summarise(geometry = st_union(geometry))
+
+## 제22대 ------------------------------
+precinct_22_sf <- st_read("data/maps/2024_22_Elec_simplify.json") |> 
+  st_make_valid() %>%
+  st_transform(crs = 4326)
+
+# 시도별 폴리곤 데이터 준비
+precinct_22_sido_sf <- precinct_22_sf %>%
+  group_by(SIDO) %>%
+  summarise(geometry = st_union(geometry))
+
+
+
+```
+
 

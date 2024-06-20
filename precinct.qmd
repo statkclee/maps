@@ -1,0 +1,113 @@
+---
+editor: 
+  markdown: 
+    wrap: 72
+editor_options: 
+  chunk_output_type: console
+---
+
+# 역대 선거구
+
+> 제19대, 제21대, 제22대 총선 선거구를 지도에 표시합니다.
+
+```{r}
+#| message: false
+#| warning: false
+#| results: "hide"
+#| eval: false
+
+library(leaflet)
+library(sf)
+library(tidyverse)
+sf_use_s2(FALSE)
+
+## 제19대 ------------------------------
+precinct_19_sf <- st_read("data/maps/국토정보공사_선거구/TL_NATI_ELECTION.shp") |> 
+  st_make_valid() %>%
+  st_transform(crs = 4326)
+
+# # 시도별 폴리곤 데이터 준비
+# precinct_19_sido_sf <- precinct_19_sf %>%
+#   group_by(CTP_KOR_NM) %>%
+#   summarise(geometry = st_union(geometry))
+
+## 제21대 ------------------------------
+precinct_21_sf <- st_read("data/maps/2020_21_elec_253_simple.json") |> 
+  st_make_valid() %>%
+  st_transform(crs = 4326)
+
+
+# # 시도별 폴리곤 데이터 준비
+# precinct_21_sido_sf <- precinct_21_sf %>%
+#   group_by(SIDO) %>%
+#   summarise(geometry = st_union(geometry))
+
+## 제22대 ------------------------------
+precinct_22_sf <- st_read("data/maps/2024_22_Elec_simplify.json") |> 
+  st_make_valid() %>%
+  st_transform(crs = 4326)
+
+# 시도별 폴리곤 데이터 준비
+precinct_22_sido_sf <- precinct_22_sf %>%
+  group_by(SIDO) %>%
+  summarise(geometry = st_union(geometry))
+```
+
+
+```{r}
+#| column: screen
+#| fig-height: 12
+#| eval: false
+
+# 지도 시각화
+precinct_m <- leaflet() %>%
+  addTiles() %>%
+  # 시도 폴리곤 추가
+  addPolygons(data = precinct_22_sido_sf, color = "black", weight = 3, opacity = 1.0, fillOpacity = 0,
+              highlightOptions = highlightOptions(color = "red", weight = 3, bringToFront = TRUE),
+              label = ~SIDO,
+              labelOptions = labelOptions(
+                style = list("font-weight" = "bold", padding = "3px 8px"),
+                textsize = "15px",
+                direction = "auto")) %>%
+  # 제19대 선거구
+  addPolygons(data = precinct_19_sf, color = "blue", weight = 1, opacity = 0.5, fillOpacity = 0.1,
+              highlightOptions = highlightOptions(color = "red", weight = 3, bringToFront = TRUE),
+              label = ~ELECT_NM,
+              group = "제19대 총선",
+              labelOptions = labelOptions(
+                style = list("font-weight" = "normal", padding = "3px 8px"),
+                textsize = "15px",
+                direction = "auto")) %>%
+  # 제21대 선거구
+  addPolygons(data = precinct_21_sf, color = "green", weight = 1.5, opacity = 0.5, fillOpacity = 0.1,
+              highlightOptions = highlightOptions(color = "red", weight = 3, bringToFront = TRUE),
+              label = ~SGG_3,
+              group = "제21대 총선",
+              labelOptions = labelOptions(
+                style = list("font-weight" = "normal", padding = "3px 8px"),
+                textsize = "15px",
+                direction = "auto")) %>%
+  # 제22대 선거구
+  addPolygons(data = precinct_22_sf, color = "purple", weight = 2, opacity = 0.5, fillOpacity = 0.1,
+              highlightOptions = highlightOptions(color = "red", weight = 3, bringToFront = TRUE),
+              label = ~SIDO_SGG,
+              group = "제22대 총선",
+              labelOptions = labelOptions(
+                style = list("font-weight" = "normal", padding = "3px 8px"),
+                textsize = "15px",
+                direction = "auto")) %>%
+  # 레이어 컨트롤 추가
+  addLayersControl(
+    overlayGroups = c("제19대 총선", "제21대 총선", "제22대 총선"),
+    options = layersControlOptions(collapsed = FALSE)
+  )
+
+library(htmlwidgets)
+saveWidget(precinct_m, file="data/precinct_m.html")
+
+```
+
+
+<iframe src="data/precinct_m.html" width="80%" height="800px"></iframe>
+
