@@ -51,30 +51,21 @@ summary(precinct_viz_sf$차이)
 colors <- c("#8B0000", "#FF0000", "#FFA07A", "white", "#ADD8E6", "#0000FF", "#00008B")
 bins <- c(-Inf, -0.2, -0.1, -0.05, 0.05, 0.1, 0.2, Inf)
 
-precincts_22_m <- precinct_viz_sf |> 
+precinct_viz_sf |> 
   leaflet() %>%
   addTiles() %>%
   addPolygons(
-    data = sido_sf,
-    weight = 5,
-    opacity = 1,
-    color = "black",
-    fillOpacity = 0,
-    group = ~SIDO
-  ) %>%
-  addPolygons(
     fillColor = ~colorBin(colors, 차이, bins = bins)(차이),
-    weight = 0.1,
-    opacity = 0.7,
+    weight = 1.5,
+    opacity = 0.5,
     color = "white",
     dashArray = "3",
     fillOpacity = 0.7,
     highlight = highlightOptions(
-      weight = 0.1,
-      opacity = 0.7,
+      weight = 1.5,
       color = "#666",
       dashArray = "",
-      fillOpacity = 1,
+      fillOpacity = 0.7,
       bringToFront = TRUE),
     label = lapply(
       sprintf(
@@ -94,8 +85,13 @@ precincts_22_m <- precinct_viz_sf |>
       direction = "auto",
       sticky = TRUE
     ),
-    popup = ~SIDO_SGG,
-    group = ~SIDO_SGG) %>%
+    popup = ~SIDO_SGG) %>%
+  addPolylines(
+    data = sido_sf,
+    weight = 5,
+    opacity = 1,
+    color = "black"
+  ) %>%
   addLegend(pal = colorBin(colors, domain = precinct_viz_sf$차이, bins = bins), 
             values = ~차이,
             labels = c("< -20%", "-20% ~ -10%", "-10% ~ -5%", "-5% ~ 5%", "5% ~ 10%", "10% ~ 20%", "> 20%"),
