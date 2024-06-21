@@ -36,10 +36,10 @@
     "href": "parliamentary.html",
     "title": "",
     "section": "",
-    "text": "총선총선 코드총선",
+    "text": "총선제22대 총선 코드제22대 총선",
     "crumbs": [
       "총선",
-      "총선"
+      "제22대 총선"
     ]
   },
   {
@@ -51,6 +51,50 @@
     "crumbs": [
       "총선",
       "역대 선거구"
+    ]
+  },
+  {
+    "objectID": "parliamentary.html#제22대-총선",
+    "href": "parliamentary.html#제22대-총선",
+    "title": "",
+    "section": "제22대 총선",
+    "text": "제22대 총선",
+    "crumbs": [
+      "총선",
+      "제20대 총선"
+    ]
+  },
+  {
+    "objectID": "parliamentary.html#선거구",
+    "href": "parliamentary.html#선거구",
+    "title": "",
+    "section": "선거구",
+    "text": "선거구",
+    "crumbs": [
+      "총선",
+      "제20대 총선"
+    ]
+  },
+  {
+    "objectID": "parliamentary.html#투개표수",
+    "href": "parliamentary.html#투개표수",
+    "title": "",
+    "section": "투개표수",
+    "text": "투개표수\n스크립트\n함수",
+    "crumbs": [
+      "총선",
+      "제20대 총선"
+    ]
+  },
+  {
+    "objectID": "parliamentary.html#결과",
+    "href": "parliamentary.html#결과",
+    "title": "",
+    "section": "결과",
+    "text": "결과",
+    "crumbs": [
+      "총선",
+      "제20대 총선"
     ]
   }
 ]

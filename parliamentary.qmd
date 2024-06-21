@@ -6,7 +6,7 @@ editor_options:
   chunk_output_type: console
 ---
 
-# 총선
+# 제22대 총선
 
 ```{r}
 #| message: false
@@ -19,39 +19,305 @@ library(sf)
 library(tidyverse)
 sf_use_s2(FALSE)
 
-## 제19대 ------------------------------
-precinct_19_sf <- st_read("data/maps/국토정보공사_선거구/TL_NATI_ELECTION.shp") |> 
-  st_make_valid() %>%
-  st_transform(crs = 4326)
-
-# 시도별 폴리곤 데이터 준
-precinct_19_sido_sf <- precinct_19_sf %>%
-  group_by(CTP_KOR_NM) %>%
-  summarise(geometry = st_union(geometry))
-
-## 제21대 ------------------------------
-precinct_21_sf <- st_read("data/maps/2020_21_elec_253_simple.json") |> 
-  st_make_valid() %>%
-  st_transform(crs = 4326)
-
+precinct_sf <- st_read("data/maps/2024_22_Elec_simplify.json")
+# 지오메트리 유효화
+precinct_sf <- st_make_valid(precinct_sf)
 
 # 시도별 폴리곤 데이터 준비
-precinct_21_sido_sf <- precinct_21_sf %>%
+sido_sf <- precinct_sf %>%
   group_by(SIDO) %>%
   summarise(geometry = st_union(geometry))
 
-## 제22대 ------------------------------
-precinct_22_sf <- st_read("data/maps/2024_22_Elec_simplify.json") |> 
-  st_make_valid() %>%
-  st_transform(crs = 4326)
+precinct_viz_winner <- precint_viz |> 
+  filter(!is.na(차이)) |> 
+  select(시도, 선거구, 당선정당=정당, 당선후보=후보, 차이) |> 
+  arrange(시도, 선거구) 
 
-# 시도별 폴리곤 데이터 준비
-precinct_22_sido_sf <- precinct_22_sf %>%
-  group_by(SIDO) %>%
-  summarise(geometry = st_union(geometry))
+precinct_viz_loser <- precint_viz |> 
+  filter(is.na(차이)) |> 
+  select(시도, 선거구, 낙선정당=정당, 낙선후보=후보)  |> 
+  arrange(시도, 선거구)
 
+precinct_viz_sf <- precinct_sf |> 
+  arrange(SIDO, SGG) |> 
+  bind_cols(precinct_viz_winner |> select(당선정당, 당선후보, 차이)) |> 
+  bind_cols(precinct_viz_loser |> select(낙선정당, 낙선후보))  |> 
+  mutate(차이 = ifelse(당선정당 == "더불어민주당", 차이, -차이))   
+  
+summary(precinct_viz_sf$차이)
+  
 
+# 지도 그리기
+colors <- c("#8B0000", "#FF0000", "#FFA07A", "white", "#ADD8E6", "#0000FF", "#00008B")
+bins <- c(-Inf, -0.2, -0.1, -0.05, 0.05, 0.1, 0.2, Inf)
 
+precincts_22_m <- precinct_viz_sf |> 
+  leaflet() %>%
+  addTiles() %>%
+  addPolygons(
+    data = sido_sf,
+    weight = 5,
+    opacity = 1,
+    color = "black",
+    fillOpacity = 0,
+    group = ~SIDO
+  ) %>%
+  addPolygons(
+    fillColor = ~colorBin(colors, 차이, bins = bins)(차이),
+    weight = 0.1,
+    opacity = 0.7,
+    color = "white",
+    dashArray = "3",
+    fillOpacity = 0.7,
+    highlight = highlightOptions(
+      weight = 0.1,
+      opacity = 0.7,
+      color = "#666",
+      dashArray = "",
+      fillOpacity = 1,
+      bringToFront = TRUE),
+    label = lapply(
+      sprintf(
+        "<b>%s</b><br/>득표차: %2.1f%%<br/>당선정당: %s<br/>당선후보: %s<br/>낙선정당: %s<br/>낙선후보: %s",
+        precinct_viz_sf$SIDO_SGG, 100*precinct_viz_sf$차이, 
+        precinct_viz_sf$당선정당, precinct_viz_sf$당선후보,
+        precinct_viz_sf$낙선정당, precinct_viz_sf$낙선후보
+      ),
+      htmltools::HTML
+    ),
+    labelOptions = labelOptions(
+      style = list(
+        "font-weight" = "normal",
+        padding = "3px 8px"
+      ),
+      textsize = "15px",
+      direction = "auto",
+      sticky = TRUE
+    ),
+    popup = ~SIDO_SGG,
+    group = ~SIDO_SGG) %>%
+  addLegend(pal = colorBin(colors, domain = precinct_viz_sf$차이, bins = bins), 
+            values = ~차이,
+            labels = c("< -20%", "-20% ~ -10%", "-10% ~ -5%", "-5% ~ 5%", "5% ~ 10%", "10% ~ 20%", "> 20%"),
+            opacity = 0.7, 
+            title = "득표율 차이",
+            position = "bottomright")
+
+library(htmlwidgets)
+saveWidget(precincts_22_m, file="data/precincts_22_m.html", selfcontained = TRUE)
+  
 ```
+
+
+:::{.column-body-outset}
+
+<iframe src="data/precincts_22_m.html" width="120%" height="800px"></iframe>
+
+:::
+
+
+
+<!-- # 데이터 -->
+
+<!-- ## 제22대 총선 -->
+
+<!-- ```{r} -->
+<!-- #| eval: false -->
+<!-- library(krvote2) -->
+<!-- library(httr) -->
+<!-- library(jsonlite) -->
+
+<!-- # 서비스 키 설정 -->
+<!-- service_key <- Sys.getenv("DATA_GO_DECODE_KEY") -->
+<!-- set_krvote2_key(service_key) -->
+
+<!-- elections <- get_all_elections() -->
+
+<!-- election_22 <- elections |>  -->
+<!--   as_tibble() |>  -->
+<!--   arrange(desc(sgId)) |>  -->
+<!--   select(sgId, sgName, sgTypecode) |>  -->
+<!--   filter(sgId == "20240410" & sgTypecode == "2") -->
+
+<!-- election_22 -->
+<!-- ``` -->
+
+
+<!-- ## 선거구 -->
+
+<!-- ```{r} -->
+<!-- #| eval: false -->
+<!-- precint_raw <- krvote2::get_all_constituencies(sgId="20240410", sgTypecode="2") -->
+
+<!-- precint_raw |>  -->
+<!--   as_tibble() -->
+<!-- ``` -->
+
+
+<!-- ## 투개표수 -->
+
+<!-- ### 스크립트 -->
+
+<!-- ```{r} -->
+<!-- #| eval: false -->
+<!-- jongro_raw <- krvote2::get_count_info(sgId = "20240410",  -->
+<!--                        sgTypecode = "2", -->
+<!--                        sggName = "종로구", -->
+<!--                        sdName = "서울특별시") |> -->
+<!--   as_tibble() -->
+
+<!-- jongro_tbl <- jongro_raw |>  -->
+<!--   pivot_longer(cols = starts_with(c("jd", "hbj", "dugsu")), -->
+<!--                names_to = c(".value", "cand_num"), -->
+<!--                names_pattern = "([a-z]+)(\\d+)", -->
+<!--                values_drop_na = TRUE, -->
+<!--                values_transform = list(dugsu = as.numeric)) |>  -->
+<!--   filter(jd != "") |>  -->
+<!--   filter(wiwName == "합계") |>  -->
+<!--   mutate(across(sunsu:gigwonsu, as.numeric)) |>  -->
+<!--   mutate(득표율 = dugsu / yutusu, -->
+<!--          투표율 = tusu / sunsu) |>  -->
+<!--   select(sdName, sggName, jd, hbj, sunsu, tusu, 투표율, yutusu, dugsu, 득표율) -->
+
+<!-- ``` -->
+
+
+<!-- ### 함수 -->
+
+<!-- ```{r} -->
+<!-- #| eval: false -->
+<!-- calculate_winner <- function(sggName = "종로구", sdName = "서울특별시") { -->
+
+<!--   cat("\n======================================\n") -->
+<!--   cat(sdName, " : ", sggName, "\n") -->
+
+<!--   sgg_raw <- krvote2::get_count_info(sgId = "20240410",  -->
+<!--                        sgTypecode = "2", -->
+<!--                        sggName = sggName, -->
+<!--                        sdName = sdName) |> -->
+<!--   as_tibble() -->
+
+<!--   sgg_tbl <- sgg_raw |>  -->
+<!--     pivot_longer(cols = starts_with(c("jd", "hbj", "dugsu")), -->
+<!--                  names_to = c(".value", "cand_num"), -->
+<!--                  names_pattern = "([a-z]+)(\\d+)", -->
+<!--                  values_drop_na = TRUE, -->
+<!--                  values_transform = list(dugsu = as.numeric)) |>  -->
+<!--     filter(jd != "") |>  -->
+<!--     filter(wiwName == "합계") |>  -->
+<!--     mutate(across(sunsu:gigwonsu, as.numeric)) |>  -->
+<!--     mutate(득표율 = dugsu / yutusu, -->
+<!--            투표율 = tusu / sunsu) |>  -->
+<!--     select(sdName, sggName, jd, hbj, sunsu, tusu, 투표율, yutusu, dugsu, 득표율) -->
+
+<!--   return(sgg_tbl) -->
+<!-- } -->
+
+<!-- calculate_winner("종로구", "서울특별시") -->
+
+<!-- precint_tbl <- precint_raw |>  -->
+<!--   as_tibble() |>  -->
+<!--   mutate(data = map2(sggName, sdName, calculate_winner))  -->
+
+<!-- precint_tbl |>  -->
+<!--   write_rds("data/국회의원_22대.rds") -->
+<!-- ``` -->
+
+
+
+<!-- ```{r} -->
+<!-- #| eval: false -->
+<!-- precint_tbl <- read_rds("data/국회의원_22대.rds") -->
+
+<!-- precint_tbl |>  -->
+<!--   select(data) |>  -->
+<!--   unnest(data) |>  -->
+<!--   group_by(sdName, sggName) |> -->
+<!--   mutate(순위 = rank(desc(득표율))) |>  -->
+<!--   filter(순위 %in% c(1,2)) |>  -->
+<!--   mutate(차이 = abs(lead(득표율) - 득표율))  -->
+
+<!-- winner_tbl <- precint_tbl |>  -->
+<!--   select(data) |>  -->
+<!--   unnest(data) |>  -->
+<!--   group_by(sdName, sggName, jd, hbj) |> -->
+<!--   summarise(sunsu = sum(sunsu), -->
+<!--             tusu = sum(tusu), -->
+<!--             yutusu = sum(yutusu), -->
+<!--             dugsu = sum(dugsu)) |>  -->
+<!--   mutate(득표율 = dugsu / yutusu, -->
+<!--          투표율 = tusu / sunsu) |>  -->
+<!--   ungroup() |>  -->
+<!--   group_by(sdName, sggName) |> -->
+<!--   mutate(순위 = rank(desc(득표율))) |>  -->
+<!--   filter(순위 %in% c(1,2)) |>  -->
+<!--   mutate(차이 = abs(lead(득표율) - 득표율)) |>  -->
+<!--   filter(!is.na(차이))  -->
+<!-- ``` -->
+
+<!-- ## 결과 -->
+
+<!-- ```{r} -->
+<!-- #| eval: false -->
+<!-- library(reactable) -->
+
+<!-- precint_viz <- precint_tbl |>  -->
+<!--   select(data) |>  -->
+<!--   unnest(data) |>  -->
+<!--   group_by(sdName, sggName, jd, hbj) |> -->
+<!--   summarise(sunsu = sum(sunsu), -->
+<!--             tusu = sum(tusu), -->
+<!--             yutusu = sum(yutusu), -->
+<!--             dugsu = sum(dugsu)) |>  -->
+<!--   mutate(득표율 = dugsu / yutusu, -->
+<!--          투표율 = tusu / sunsu) |>  -->
+<!--   ungroup() |>  -->
+<!--   group_by(sdName, sggName) |> -->
+<!--   mutate(순위 = rank(desc(득표율))) |>  -->
+<!--   filter(순위 %in% c(1,2)) |>  -->
+<!--   ungroup() |>  -->
+<!--   group_by(sdName, sggName) |> -->
+<!--   arrange(순위) |>  -->
+<!--   mutate(차이 = abs(lead(득표율) - 득표율)) |>  -->
+<!--   # ungroup() |>  -->
+<!--   set_names(c("시도", "선거구", "정당", "후보", "선거인수", "투표수", "유효투표수", "득표수", "득표율", "투표율", "순위", "차이")) |>  -->
+<!--   select(-유효투표수)  -->
+
+<!-- precint_viz |>  -->
+<!--   reactable( -->
+<!--     searchable = TRUE, -->
+<!--     filterable = TRUE, -->
+<!--     defaultColDef = colDef( -->
+<!--       header = function(value) gsub(".", " ", value, fixed = TRUE), -->
+<!--       align = "center", -->
+<!--       minWidth = 80, -->
+<!--       headerStyle = list(background = "#f7f7f8") -->
+<!--     ), -->
+<!--     columns = list( -->
+<!--       시도 = colDef(minWidth = 60), -->
+<!--       선거구 = colDef(minWidth = 90), -->
+<!--       정당 = colDef(minWidth = 100), -->
+<!--       후보 = colDef(minWidth = 80), -->
+<!--       선거인수 = colDef(format = colFormat(separators = TRUE, digits = 0)), -->
+<!--       투표수 = colDef(format = colFormat(separators = TRUE, digits = 0)), -->
+<!--       득표수 = colDef(format = colFormat(separators = TRUE, digits = 0)), -->
+<!--       득표율 = colDef(format = colFormat(percent = TRUE, digits = 1)), -->
+<!--       투표율 = colDef(format = colFormat(percent = TRUE, digits = 1)), -->
+<!--       차이 = colDef(format = colFormat(percent = TRUE, digits = 2)) -->
+<!--     ), -->
+<!--     bordered = TRUE, -->
+<!--     highlight = TRUE, -->
+<!--     striped = TRUE, -->
+<!--     compact = TRUE, -->
+<!--     wrap = FALSE, -->
+<!--     resizable = TRUE, -->
+<!--     showPageSizeOptions = TRUE, -->
+<!--     pageSizeOptions = c(10, 20, 50, 100), -->
+<!--     defaultPageSize = 20, -->
+<!--     showPagination = TRUE, -->
+<!--     paginationType = "numbers" -->
+<!--   ) -->
+<!-- ``` -->
+
 
 
