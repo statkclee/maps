@@ -38,6 +38,9 @@ website:
           - office.qmd
           - precinct.qmd
           - parliamentary.qmd
+      - section: "지선"
+        contents:
+          - local.qmd
 
   page-footer:
     center: |

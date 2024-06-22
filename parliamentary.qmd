@@ -51,7 +51,9 @@ summary(precinct_viz_sf$차이)
 colors <- c("#8B0000", "#FF0000", "#FFA07A", "white", "#ADD8E6", "#0000FF", "#00008B")
 bins <- c(-Inf, -0.2, -0.1, -0.05, 0.05, 0.1, 0.2, Inf)
 
-precinct_viz_sf |> 
+color_function <- colorBin(colors, precinct_viz_sf$차이, bins = bins)
+
+precincts_22_m <- precinct_viz_sf |> 
   leaflet() %>%
   addTiles() %>%
   addPolygons(
@@ -92,12 +94,18 @@ precinct_viz_sf |>
     opacity = 1,
     color = "black"
   ) %>%
-  addLegend(pal = colorBin(colors, domain = precinct_viz_sf$차이, bins = bins), 
-            values = ~차이,
-            labels = c("< -20%", "-20% ~ -10%", "-10% ~ -5%", "-5% ~ 5%", "5% ~ 10%", "10% ~ 20%", "> 20%"),
-            opacity = 0.7, 
-            title = "득표율 차이",
-            position = "bottomright")
+  addLegend(
+    pal = color_function, 
+    values = ~차이,
+    labFormat = labelFormat(
+      prefix = "",
+      suffix = "%",
+      transform = function(x) 100 * x
+    ),
+    opacity = 0.7, 
+    title = "득표율 차이",
+    position = "bottomright"
+  )
 
 library(htmlwidgets)
 saveWidget(precincts_22_m, file="data/precincts_22_m.html", selfcontained = TRUE)
@@ -129,10 +137,10 @@ saveWidget(precincts_22_m, file="data/precincts_22_m.html", selfcontained = TRUE
 
 <!-- elections <- get_all_elections() -->
 
-<!-- election_22 <- elections |>  -->
-<!--   as_tibble() |>  -->
-<!--   arrange(desc(sgId)) |>  -->
-<!--   select(sgId, sgName, sgTypecode) |>  -->
+<!-- election_22 <- elections |> -->
+<!--   as_tibble() |> -->
+<!--   arrange(desc(sgId)) |> -->
+<!--   select(sgId, sgName, sgTypecode) |> -->
 <!--   filter(sgId == "20240410" & sgTypecode == "2") -->
 
 <!-- election_22 -->
@@ -145,7 +153,7 @@ saveWidget(precincts_22_m, file="data/precincts_22_m.html", selfcontained = TRUE
 <!-- #| eval: false -->
 <!-- precint_raw <- krvote2::get_all_constituencies(sgId="20240410", sgTypecode="2") -->
 
-<!-- precint_raw |>  -->
+<!-- precint_raw |> -->
 <!--   as_tibble() -->
 <!-- ``` -->
 
@@ -156,23 +164,23 @@ saveWidget(precincts_22_m, file="data/precincts_22_m.html", selfcontained = TRUE
 
 <!-- ```{r} -->
 <!-- #| eval: false -->
-<!-- jongro_raw <- krvote2::get_count_info(sgId = "20240410",  -->
+<!-- jongro_raw <- krvote2::get_count_info(sgId = "20240410", -->
 <!--                        sgTypecode = "2", -->
 <!--                        sggName = "종로구", -->
 <!--                        sdName = "서울특별시") |> -->
 <!--   as_tibble() -->
 
-<!-- jongro_tbl <- jongro_raw |>  -->
+<!-- jongro_tbl <- jongro_raw |> -->
 <!--   pivot_longer(cols = starts_with(c("jd", "hbj", "dugsu")), -->
 <!--                names_to = c(".value", "cand_num"), -->
 <!--                names_pattern = "([a-z]+)(\\d+)", -->
 <!--                values_drop_na = TRUE, -->
-<!--                values_transform = list(dugsu = as.numeric)) |>  -->
-<!--   filter(jd != "") |>  -->
-<!--   filter(wiwName == "합계") |>  -->
-<!--   mutate(across(sunsu:gigwonsu, as.numeric)) |>  -->
+<!--                values_transform = list(dugsu = as.numeric)) |> -->
+<!--   filter(jd != "") |> -->
+<!--   filter(wiwName == "합계") |> -->
+<!--   mutate(across(sunsu:gigwonsu, as.numeric)) |> -->
 <!--   mutate(득표율 = dugsu / yutusu, -->
-<!--          투표율 = tusu / sunsu) |>  -->
+<!--          투표율 = tusu / sunsu) |> -->
 <!--   select(sdName, sggName, jd, hbj, sunsu, tusu, 투표율, yutusu, dugsu, 득표율) -->
 
 <!-- ``` -->
@@ -187,23 +195,23 @@ saveWidget(precincts_22_m, file="data/precincts_22_m.html", selfcontained = TRUE
 <!--   cat("\n======================================\n") -->
 <!--   cat(sdName, " : ", sggName, "\n") -->
 
-<!--   sgg_raw <- krvote2::get_count_info(sgId = "20240410",  -->
+<!--   sgg_raw <- krvote2::get_count_info(sgId = "20240410", -->
 <!--                        sgTypecode = "2", -->
 <!--                        sggName = sggName, -->
 <!--                        sdName = sdName) |> -->
 <!--   as_tibble() -->
 
-<!--   sgg_tbl <- sgg_raw |>  -->
+<!--   sgg_tbl <- sgg_raw |> -->
 <!--     pivot_longer(cols = starts_with(c("jd", "hbj", "dugsu")), -->
 <!--                  names_to = c(".value", "cand_num"), -->
 <!--                  names_pattern = "([a-z]+)(\\d+)", -->
 <!--                  values_drop_na = TRUE, -->
-<!--                  values_transform = list(dugsu = as.numeric)) |>  -->
-<!--     filter(jd != "") |>  -->
-<!--     filter(wiwName == "합계") |>  -->
-<!--     mutate(across(sunsu:gigwonsu, as.numeric)) |>  -->
+<!--                  values_transform = list(dugsu = as.numeric)) |> -->
+<!--     filter(jd != "") |> -->
+<!--     filter(wiwName == "합계") |> -->
+<!--     mutate(across(sunsu:gigwonsu, as.numeric)) |> -->
 <!--     mutate(득표율 = dugsu / yutusu, -->
-<!--            투표율 = tusu / sunsu) |>  -->
+<!--            투표율 = tusu / sunsu) |> -->
 <!--     select(sdName, sggName, jd, hbj, sunsu, tusu, 투표율, yutusu, dugsu, 득표율) -->
 
 <!--   return(sgg_tbl) -->
@@ -211,11 +219,11 @@ saveWidget(precincts_22_m, file="data/precincts_22_m.html", selfcontained = TRUE
 
 <!-- calculate_winner("종로구", "서울특별시") -->
 
-<!-- precint_tbl <- precint_raw |>  -->
-<!--   as_tibble() |>  -->
-<!--   mutate(data = map2(sggName, sdName, calculate_winner))  -->
+<!-- precint_tbl <- precint_raw |> -->
+<!--   as_tibble() |> -->
+<!--   mutate(data = map2(sggName, sdName, calculate_winner)) -->
 
-<!-- precint_tbl |>  -->
+<!-- precint_tbl |> -->
 <!--   write_rds("data/국회의원_22대.rds") -->
 <!-- ``` -->
 
@@ -225,30 +233,31 @@ saveWidget(precincts_22_m, file="data/precincts_22_m.html", selfcontained = TRUE
 <!-- #| eval: false -->
 <!-- precint_tbl <- read_rds("data/국회의원_22대.rds") -->
 
-<!-- precint_tbl |>  -->
-<!--   select(data) |>  -->
-<!--   unnest(data) |>  -->
+<!-- precint_tbl |> -->
+<!--   select(data) |> -->
+<!--   unnest(data) |> -->
 <!--   group_by(sdName, sggName) |> -->
-<!--   mutate(순위 = rank(desc(득표율))) |>  -->
-<!--   filter(순위 %in% c(1,2)) |>  -->
-<!--   mutate(차이 = abs(lead(득표율) - 득표율))  -->
+<!--   mutate(순위 = rank(desc(득표율))) |> -->
+<!--   filter(순위 %in% c(1,2)) |> -->
+<!--   mutate(차이 = abs(lead(득표율) - 득표율)) -->
 
-<!-- winner_tbl <- precint_tbl |>  -->
-<!--   select(data) |>  -->
-<!--   unnest(data) |>  -->
+<!-- winner_tbl <- precint_tbl |> -->
+<!--   select(data) |> -->
+<!--   unnest(data) |> -->
 <!--   group_by(sdName, sggName, jd, hbj) |> -->
 <!--   summarise(sunsu = sum(sunsu), -->
 <!--             tusu = sum(tusu), -->
 <!--             yutusu = sum(yutusu), -->
-<!--             dugsu = sum(dugsu)) |>  -->
+<!--             dugsu = sum(dugsu)) |> -->
 <!--   mutate(득표율 = dugsu / yutusu, -->
-<!--          투표율 = tusu / sunsu) |>  -->
-<!--   ungroup() |>  -->
+<!--          투표율 = tusu / sunsu) |> -->
+<!--   ungroup() |> -->
 <!--   group_by(sdName, sggName) |> -->
-<!--   mutate(순위 = rank(desc(득표율))) |>  -->
-<!--   filter(순위 %in% c(1,2)) |>  -->
-<!--   mutate(차이 = abs(lead(득표율) - 득표율)) |>  -->
-<!--   filter(!is.na(차이))  -->
+<!--   mutate(순위 = rank(desc(득표율))) |> -->
+<!--   filter(순위 %in% c(1,2)) |> -->
+<!--   arrange(순위) |>    -->
+<!--   mutate(차이 = abs(lead(득표율) - 득표율)) |> -->
+<!--   filter(!is.na(차이)) -->
 <!-- ``` -->
 
 <!-- ## 결과 -->
@@ -257,29 +266,29 @@ saveWidget(precincts_22_m, file="data/precincts_22_m.html", selfcontained = TRUE
 <!-- #| eval: false -->
 <!-- library(reactable) -->
 
-<!-- precint_viz <- precint_tbl |>  -->
-<!--   select(data) |>  -->
-<!--   unnest(data) |>  -->
+<!-- precint_viz <- precint_tbl |> -->
+<!--   select(data) |> -->
+<!--   unnest(data) |> -->
 <!--   group_by(sdName, sggName, jd, hbj) |> -->
 <!--   summarise(sunsu = sum(sunsu), -->
 <!--             tusu = sum(tusu), -->
 <!--             yutusu = sum(yutusu), -->
-<!--             dugsu = sum(dugsu)) |>  -->
+<!--             dugsu = sum(dugsu)) |> -->
 <!--   mutate(득표율 = dugsu / yutusu, -->
-<!--          투표율 = tusu / sunsu) |>  -->
-<!--   ungroup() |>  -->
+<!--          투표율 = tusu / sunsu) |> -->
+<!--   ungroup() |> -->
 <!--   group_by(sdName, sggName) |> -->
-<!--   mutate(순위 = rank(desc(득표율))) |>  -->
-<!--   filter(순위 %in% c(1,2)) |>  -->
-<!--   ungroup() |>  -->
+<!--   mutate(순위 = rank(desc(득표율))) |> -->
+<!--   filter(순위 %in% c(1,2)) |> -->
+<!--   ungroup() |> -->
 <!--   group_by(sdName, sggName) |> -->
-<!--   arrange(순위) |>  -->
-<!--   mutate(차이 = abs(lead(득표율) - 득표율)) |>  -->
-<!--   # ungroup() |>  -->
-<!--   set_names(c("시도", "선거구", "정당", "후보", "선거인수", "투표수", "유효투표수", "득표수", "득표율", "투표율", "순위", "차이")) |>  -->
-<!--   select(-유효투표수)  -->
+<!--   arrange(순위) |> -->
+<!--   mutate(차이 = abs(lead(득표율) - 득표율)) |> -->
+<!--   # ungroup() |> -->
+<!--   set_names(c("시도", "선거구", "정당", "후보", "선거인수", "투표수", "유효투표수", "득표수", "득표율", "투표율", "순위", "차이")) |> -->
+<!--   select(-유효투표수) -->
 
-<!-- precint_viz |>  -->
+<!-- precint_viz |> -->
 <!--   reactable( -->
 <!--     searchable = TRUE, -->
 <!--     filterable = TRUE, -->

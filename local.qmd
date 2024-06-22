@@ -1,0 +1,214 @@
+---
+editor: 
+  markdown: 
+    wrap: 72
+editor_options: 
+  chunk_output_type: console
+---
+
+# 제8대 지선
+
+# 데이터
+
+## 시도지사
+
+```{r}
+#| eval: false
+library(krvote2)
+library(httr)
+library(jsonlite)
+
+# 서비스 키 설정
+service_key <- Sys.getenv("DATA_GO_DECODE_KEY")
+set_krvote2_key(service_key)
+
+elections <- get_all_elections()
+
+local_sido_8 <- elections |>
+  as_tibble() |>
+  arrange(desc(sgId)) |>
+  select(sgId, sgName, sgTypecode) |>
+  filter(sgId == "20220601" & sgTypecode == "3") #  & sgTypecode == "4" 구시군의장
+
+local_sido_8
+```
+
+
+## 선거구
+
+```{r}
+#| eval: false
+precint_sido <- krvote2::get_all_constituencies(sgId="20220601", sgTypecode="3")
+
+precint_sido |>
+  as_tibble()
+```
+
+## 투개표수
+
+### 스크립트
+
+```{r}
+#| eval: false
+seoul_raw <- krvote2::get_count_info(sgId = "20220601",
+                       sgTypecode = "3",
+                       sdName = "서울특별시",
+                       sggName = "서울특별시") |>
+  as_tibble()
+
+seoul_tbl <- seoul_raw |>
+  pivot_longer(cols = starts_with(c("jd", "hbj", "dugsu")),
+               names_to = c(".value", "cand_num"),
+               names_pattern = "([a-z]+)(\\d+)",
+               values_drop_na = TRUE,
+               values_transform = list(dugsu = as.numeric)) |>
+  filter(jd != "") |>
+  filter(wiwName == "합계") |>
+  mutate(across(sunsu:gigwonsu, as.numeric)) |>
+  mutate(득표율 = dugsu / yutusu,
+         투표율 = tusu / sunsu) |>
+  select(sdName, sggName, jd, hbj, sunsu, tusu, 투표율, yutusu, dugsu, 득표율)
+
+```
+
+
+### 함수
+
+```{r}
+#| eval: false
+calculate_winner <- function(sdName = "서울특별시", sggName = "서울특별시") {
+
+  cat("\n======================================\n")
+  cat(sdName, " : ", sggName, "\n")
+
+  sgg_raw <- krvote2::get_count_info(sgId = "20220601",
+                       sgTypecode = "3",
+                       sdName = sdName,
+                       sggName = sggName) |>
+  as_tibble()
+
+  sgg_tbl <- sgg_raw |>
+    pivot_longer(cols = starts_with(c("jd", "hbj", "dugsu")),
+                 names_to = c(".value", "cand_num"),
+                 names_pattern = "([a-z]+)(\\d+)",
+                 values_drop_na = TRUE,
+                 values_transform = list(dugsu = as.numeric)) |>
+    filter(jd != "") |>
+    filter(wiwName == "합계") |>
+    mutate(across(sunsu:gigwonsu, as.numeric)) |>
+    mutate(득표율 = dugsu / yutusu,
+           투표율 = tusu / sunsu) |>
+    select(sdName, sggName, jd, hbj, sunsu, tusu, 투표율, yutusu, dugsu, 득표율)
+
+  return(sgg_tbl)
+}
+
+calculate_winner("서울특별시", "서울특별시")
+
+precint_sido_tbl <- precint_sido |>
+  as_tibble() |>
+  mutate(data = map2(sdName, sggName, calculate_winner))
+
+precint_sido_tbl |>
+  write_rds("data/지선_8회_시도지사.rds")
+```
+
+
+
+```{r}
+#| eval: false
+precint_sido_tbl <- read_rds("data/지선_8회_시도지사.rds")
+
+precint_sido_tbl |>
+  select(data) |>
+  unnest(data) |>
+  group_by(sdName, sggName) |>
+  mutate(순위 = rank(desc(득표율))) |>
+  filter(순위 %in% c(1,2)) |>
+  mutate(차이 = abs(lead(득표율) - 득표율))
+
+precint_sido_tbl |>
+  select(data) |>
+  unnest(data) |>
+  group_by(sdName, sggName, jd, hbj) |>
+  summarise(sunsu = sum(sunsu),
+            tusu = sum(tusu),
+            yutusu = sum(yutusu),
+            dugsu = sum(dugsu)) |>
+  mutate(득표율 = dugsu / yutusu,
+         투표율 = tusu / sunsu) |>
+  ungroup() |>
+  group_by(sdName, sggName) |>
+  mutate(순위 = rank(desc(득표율))) |>
+  filter(순위 %in% c(1,2)) |>
+  arrange(순위) |> 
+  mutate(차이 = abs(lead(득표율) - 득표율)) |> 
+  filter(!is.na(차이))
+```
+
+## 결과
+
+```{r}
+#| eval: false
+library(reactable)
+
+precint_viz <- precint_tbl |>
+  select(data) |>
+  unnest(data) |>
+  group_by(sdName, sggName, jd, hbj) |>
+  summarise(sunsu = sum(sunsu),
+            tusu = sum(tusu),
+            yutusu = sum(yutusu),
+            dugsu = sum(dugsu)) |>
+  mutate(득표율 = dugsu / yutusu,
+         투표율 = tusu / sunsu) |>
+  ungroup() |>
+  group_by(sdName, sggName) |>
+  mutate(순위 = rank(desc(득표율))) |>
+  filter(순위 %in% c(1,2)) |>
+  ungroup() |>
+  group_by(sdName, sggName) |>
+  arrange(순위) |>
+  mutate(차이 = abs(lead(득표율) - 득표율)) |>
+  # ungroup() |>
+  set_names(c("시도", "선거구", "정당", "후보", "선거인수", "투표수", "유효투표수", "득표수", "득표율", "투표율", "순위", "차이")) |>
+  select(-유효투표수)
+
+precint_viz |>
+  reactable(
+    searchable = TRUE,
+    filterable = TRUE,
+    defaultColDef = colDef(
+      header = function(value) gsub(".", " ", value, fixed = TRUE),
+      align = "center",
+      minWidth = 80,
+      headerStyle = list(background = "#f7f7f8")
+    ),
+    columns = list(
+      시도 = colDef(minWidth = 60),
+      선거구 = colDef(minWidth = 90),
+      정당 = colDef(minWidth = 100),
+      후보 = colDef(minWidth = 80),
+      선거인수 = colDef(format = colFormat(separators = TRUE, digits = 0)),
+      투표수 = colDef(format = colFormat(separators = TRUE, digits = 0)),
+      득표수 = colDef(format = colFormat(separators = TRUE, digits = 0)),
+      득표율 = colDef(format = colFormat(percent = TRUE, digits = 1)),
+      투표율 = colDef(format = colFormat(percent = TRUE, digits = 1)),
+      차이 = colDef(format = colFormat(percent = TRUE, digits = 2))
+    ),
+    bordered = TRUE,
+    highlight = TRUE,
+    striped = TRUE,
+    compact = TRUE,
+    wrap = FALSE,
+    resizable = TRUE,
+    showPageSizeOptions = TRUE,
+    pageSizeOptions = c(10, 20, 50, 100),
+    defaultPageSize = 20,
+    showPagination = TRUE,
+    paginationType = "numbers"
+  )
+```
+
+
+
