@@ -41,6 +41,7 @@ website:
       - section: "지선"
         contents:
           - local.qmd
+          - local_sgg.qmd
 
   page-footer:
     center: |

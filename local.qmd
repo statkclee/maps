@@ -6,7 +6,7 @@ editor_options:
   chunk_output_type: console
 ---
 
-# 제8대 지선
+# 제8대 지선 - 시도지사
 
 ## 시도 지사
 

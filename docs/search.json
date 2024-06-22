@@ -102,10 +102,10 @@
     "href": "local.html",
     "title": "",
     "section": "",
-    "text": "지선제8대 지선 코드",
+    "text": "지선제8대 지선 - 시도지사 코드",
     "crumbs": [
       "지선",
-      "제8대 지선"
+      "제8대 지선 - 시도지사"
     ]
   },
   {
@@ -160,7 +160,29 @@
     "text": "시도 지사",
     "crumbs": [
       "지선",
-      "제8대 지선"
+      "제8대 지선 - 시도지사"
+    ]
+  },
+  {
+    "objectID": "local_sgg.html",
+    "href": "local_sgg.html",
+    "title": "",
+    "section": "",
+    "text": "지선제8대 지선 - 구시군의 장 코드",
+    "crumbs": [
+      "지선",
+      "제8대 지선 - 구시군의 장"
+    ]
+  },
+  {
+    "objectID": "local_sgg.html#구시군의-장",
+    "href": "local_sgg.html#구시군의-장",
+    "title": "",
+    "section": "구시군의 장",
+    "text": "구시군의 장",
+    "crumbs": [
+      "지선",
+      "제8대 지선 - 구시군의 장"
     ]
   }
 ]
