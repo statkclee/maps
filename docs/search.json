@@ -184,5 +184,27 @@
       "지선",
       "제8대 지선 - 구시군의 장"
     ]
+  },
+  {
+    "objectID": "president.html",
+    "href": "president.html",
+    "title": "",
+    "section": "",
+    "text": "대선제20대 대통령 선거 코드",
+    "crumbs": [
+      "대선",
+      "제20대 대통령 선거"
+    ]
+  },
+  {
+    "objectID": "president.html#시각화",
+    "href": "president.html#시각화",
+    "title": "",
+    "section": "시각화",
+    "text": "시각화",
+    "crumbs": [
+      "대선",
+      "제20대 대통령 선거"
+    ]
   }
 ]

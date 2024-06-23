@@ -33,15 +33,18 @@ website:
       - section: "인구통계"
         contents:
           - demographics.qmd
+      - section: "지선"
+        contents:
+          - local.qmd
+          - local_sgg.qmd
+      - section: "대선"
+        contents:
+          - president.qmd
       - section: "총선"
         contents:
           - office.qmd
           - precinct.qmd
           - parliamentary.qmd
-      - section: "지선"
-        contents:
-          - local.qmd
-          - local_sgg.qmd
 
   page-footer:
     center: |
