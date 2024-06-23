@@ -70,7 +70,10 @@ format:
     mermaid:
       theme: neutral # https://quarto.org/docs/authoring/diagrams.html#mermaid-theming
     
-
+# ---------------------------------- #
+filters:
+  - shinylive
+  - webr
 
 bibliography: assets/references.bib
 csl: assets/apa-single-spaced.csl

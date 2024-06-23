@@ -36,7 +36,7 @@
     "href": "parliamentary.html",
     "title": "",
     "section": "",
-    "text": "총선제22대 총선 코드제22대 총선",
+    "text": "총선제22대 총선 코드",
     "crumbs": [
       "총선",
       "제22대 총선"
@@ -205,6 +205,28 @@
     "crumbs": [
       "대선",
       "제20대 대통령 선거"
+    ]
+  },
+  {
+    "objectID": "parliamentary.html#전국",
+    "href": "parliamentary.html#전국",
+    "title": "",
+    "section": "전국",
+    "text": "전국",
+    "crumbs": [
+      "총선",
+      "제22대 총선"
+    ]
+  },
+  {
+    "objectID": "parliamentary.html#시도별",
+    "href": "parliamentary.html#시도별",
+    "title": "",
+    "section": "시도별",
+    "text": "시도별\n#| label: shinylive-parliamentary-sido\n#| viewerWidth: 800\n#| viewerHeight: 600\n#| standalone: true\n\nlibrary(shiny)\nlibrary(leaflet)\nlibrary(sf)\nlibrary(dplyr)\nlibrary(here)\n\n\nprecinct_sf &lt;- st_read(str_glue(\"{here::here()}/data/maps/2024_22_Elec_simplify.json\"))\n\nprecinct_viz_sf &lt;-  \n  read_rds(str_glue(\"{here::here()}/data/제22대_국회의원선거_지도.rds\"))\n\nsf::sf_use_s2(FALSE)\n\nprecinct_sf &lt;- st_make_valid(precinct_sf)\n\nsido_sf &lt;- precinct_sf %&gt;% \n  group_by(SIDO) %&gt;%\n  summarise(geometry = st_union(geometry))\n\n# Define UI\nui &lt;- fluidPage(\n  titlePanel(\"제23대 국회의원 선거\"),\n  sidebarLayout(\n    sidebarPanel(\n      selectInput(\"sido\", \"시도:\", \n                  choices = unique(precinct_viz_sf$SIDO),\n                  selected = unique(precinct_viz_sf$SIDO)[1])\n    ),\n    mainPanel(\n      leafletOutput(\"map\", height = \"600px\")\n    )  )\n)\n\n# Define server\nserver &lt;- function(input, output) {\n  \n  # Reactive expression for the selected 시도\n  selected_sido &lt;- reactive({\n    precinct_viz_sf %&gt;% filter(SIDO == input$sido)\n  })\n  \n  # Render the map\n  output$map &lt;- renderLeaflet({\n    colors &lt;- c(\"#8B0000\", \"#FF0000\", \"#FFA07A\", \"white\", \"#ADD8E6\", \"#0000FF\", \"#00008B\")\n    bins &lt;- c(-Inf, -0.2, -0.1, -0.05, 0.05, 0.1, 0.2, Inf)\n    color_function &lt;- colorBin(colors, domain = precinct_viz_sf$차이, bins = bins)\n    \n    map &lt;- leaflet(selected_sido()) %&gt;%\n      addTiles() %&gt;%\n      addPolygons(\n        fillColor = ~color_function(차이),\n        weight = 1.5,\n        opacity = 0.5,\n        color = \"white\",\n        dashArray = \"3\",\n        fillOpacity = 0.7,\n        highlight = highlightOptions(\n          weight = 1.5,\n          color = \"#666\",\n          dashArray = \"\",\n          fillOpacity = 0.7,\n          bringToFront = TRUE),\n        label = lapply(\n          sprintf(\n            \"&lt;b&gt;%s&lt;/b&gt;&lt;br/&gt;득표차: %2.1f%%&lt;br/&gt;당선정당: %s&lt;br/&gt;당선후보: %s&lt;br/&gt;낙선정당: %s&lt;br/&gt;낙선후보: %s\",\n            selected_sido()$SIDO_SGG, 100*selected_sido()$차이, \n            selected_sido()$당선정당, selected_sido()$당선후보,\n            selected_sido()$낙선정당, selected_sido()$낙선후보\n          ),\n          htmltools::HTML\n        ),\n        labelOptions = labelOptions(\n          style = list(\"font-weight\" = \"normal\", padding = \"3px 8px\"),\n          textsize = \"15px\",\n          direction = \"auto\",\n          sticky = TRUE\n        )\n      ) %&gt;%\n      addPolylines(\n        data = sido_sf,\n        weight = 5,\n        opacity = 1,\n        color = \"black\"\n      ) %&gt;%\n      addLegend(\n        pal = color_function,\n        values = ~차이,\n        labFormat = labelFormat(suffix = \"%\", transform = function(x) 100 * x), \n        opacity = 0.7,\n        title = \"득표율 차이\",\n        position = \"bottomright\"\n      )\n    \n    # Fit the map bounds to the selected 시도\n    map %&gt;% fitBounds(\n      lng1 = st_bbox(selected_sido())[[\"xmin\"]],\n      lat1 = st_bbox(selected_sido())[[\"ymin\"]],\n      lng2 = st_bbox(selected_sido())[[\"xmax\"]],\n      lat2 = st_bbox(selected_sido())[[\"ymax\"]]\n    )\n  })\n  \n}\n\n# Run the app\nshinyApp(ui, server)",
+    "crumbs": [
+      "총선",
+      "제22대 총선"
     ]
   }
 ]
