@@ -45,6 +45,9 @@ website:
           - office.qmd
           - precinct.qmd
           - parliamentary.qmd
+      - section: "부동산"
+        contents:
+          - real_estate.qmd
 
   page-footer:
     center: |

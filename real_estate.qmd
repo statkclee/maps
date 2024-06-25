@@ -1,0 +1,469 @@
+---
+editor: 
+  markdown: 
+    wrap: 72
+editor_options: 
+  chunk_output_type: console
+---
+
+# 자가비율
+
+> [거주지역별 주택소유 및 무주택 가구수](https://kosis.kr/statHtml/statHtml.do?orgId=101&tblId=DT_1OH0402&conn_path=I2) 
+
+
+
+## 시도별 자가비율
+
+<!-- ### 데이터 -->
+
+<!-- ```{r} -->
+<!-- library(kosis) -->
+<!-- library(tidyverse) -->
+<!-- library(httr2) -->
+<!-- library(rversions) -->
+
+<!-- # httr2::curl_translate("curl https://kosis.kr/openapi/Param/statisticsParameterData.do?method=getList&apiKey=인증키없음&itmId=T001+T002+T003+&objL1=11+21+22+23+24+25+26+29+31+32+33+34+35+36+37+38+39+&objL2=&objL3=&objL4=&objL5=&objL6=&objL7=&objL8=&format=json&jsonVD=Y&prdSe=Y&newEstPrdCnt=3&orgId=101&tblId=DT_1OH0402") -->
+
+<!-- # KOSIS API 요청 스크립트 (업데이트됨) -->
+
+<!-- library(httr2) -->
+<!-- library(jsonlite) -->
+
+<!-- get_kosis_data <- function() { -->
+<!--   resp <- request("https://kosis.kr/openapi/Param/statisticsParameterData.do") |>  -->
+<!--     req_url_query( -->
+<!--       method = "getList", -->
+<!--       apiKey = Sys.getenv("KOSIS_API_KEY"), -->
+<!--       itmId = "T001+T002+T003+", -->
+<!--       objL1 = "11+21+22+23+24+25+26+29+31+32+33+34+35+36+37+38+39+", -->
+<!--       objL2 = "", -->
+<!--       objL3 = "", -->
+<!--       objL4 = "", -->
+<!--       objL5 = "", -->
+<!--       objL6 = "", -->
+<!--       objL7 = "", -->
+<!--       objL8 = "", -->
+<!--       format = "json", -->
+<!--       jsonVD = "Y", -->
+<!--       prdSe = "Y", -->
+<!--       newEstPrdCnt = "10", -->
+<!--       orgId = "101", -->
+<!--       tblId = "DT_1OH0402" -->
+<!--     ) |>  -->
+<!--     req_perform() -->
+
+<!--   return(resp) -->
+<!-- } -->
+
+<!-- # API 요청 실행 및 결과 처리 -->
+<!-- tryCatch({ -->
+<!--   response <- get_kosis_data() -->
+
+<!--   # 응답 상태 및 콘텐츠 타입 출력 -->
+<!--   print(paste("응답 상태:", resp_status(response))) -->
+<!--   print(paste("콘텐츠 타입:", resp_content_type(response))) -->
+
+<!--   if (resp_status(response) == 200) { -->
+<!--     # 응답 본문을 문자열로 가져옴 -->
+<!--     response_text <- resp_body_string(response) -->
+
+<!--     # JSON 파싱 시도 -->
+<!--     tryCatch({ -->
+<!--       re_data <- fromJSON(response_text) -->
+<!--       print("JSON 데이터를 성공적으로 파싱했습니다.") -->
+<!--       print(str(re_data))  # 데이터 구조 출력 -->
+
+<!--       # 데이터 프레임으로 변환 -->
+<!--       re_raw <- as.data.frame(re_data) -->
+<!--       print(head(re_raw))  # 처음 몇 행 출력 -->
+
+<!--       # 여기에 추가적인 데이터 처리 코드를 넣을 수 있습니다. -->
+
+<!--     }, error = function(e) { -->
+<!--       print("JSON 파싱에 실패했습니다. 원본 텍스트:") -->
+<!--       print(substr(response_text, 1, 500))  # 처음 500자만 출력 -->
+<!--     }) -->
+<!--   } else { -->
+<!--     print(paste("API 요청 실패. 상태 코드:", resp_status(response))) -->
+<!--   } -->
+<!-- }, error = function(e) { -->
+<!--   print(paste("오류 발생:", e$message)) -->
+<!-- }) -->
+
+<!-- re_raw |>  -->
+<!--   janitor::clean_names() |>  -->
+<!--   as_tibble() |>  -->
+<!--   glimpse() -->
+
+<!-- re_tbl <- re_raw |>  -->
+<!--   janitor::clean_names() |>    -->
+<!--   as_tibble() |>  -->
+<!--   dplyr::select(연도 = prd_de, 시도 = c1_nm, 구분 = itm_nm, 값 = dt) |>  -->
+<!--   filter(!str_detect(구분, "총 가구")) |>  -->
+<!--   mutate(연도 = as.integer(연도), -->
+<!--          값 = as.integer(값)) |>  -->
+<!--   pivot_wider(names_from = 구분, values_from = 값) |> -->
+<!--   mutate(자가비율 = `주택소유 가구` / (`주택소유 가구` + `무주택 가구`)) |>  -->
+<!--   group_by(시도) |> -->
+<!--   mutate(평균자가비율 = mean(자가비율, na.rm = TRUE)) |> -->
+<!--   ungroup() |> -->
+<!--   mutate(시도 = reorder(시도, 평균자가비율))  -->
+
+<!-- # re_tbl |>  -->
+<!-- #   write_csv("data/re_자가비율_시도.csv") -->
+<!-- ``` -->
+
+<!-- ### 그래프 -->
+
+<!-- ```{r} -->
+<!-- re_tbl <-  -->
+<!--   read_csv("data/re_자가비율_시도.csv") -->
+
+<!-- re_sido_g <- re_tbl |>  -->
+<!--   ggplot(aes(x = 연도, y = 자가비율, color = 시도)) + -->
+<!--     geom_line() + -->
+<!--     geom_point() + -->
+<!--     scale_y_continuous(labels = scales::percent_format(accuracy = 1)) + -->
+<!--     facet_wrap(~시도, scales = "fixed", ncol = 5) + -->
+<!--     theme(legend.position = "none", -->
+<!--           axis.text.x = element_text(angle = 45, hjust = 1), -->
+<!--           strip.text = element_text(face = "bold")) + -->
+<!--     labs(title = "시도별 자가비율 추이", -->
+<!--          x = NULL, -->
+<!--          y = "자가비율",  -->
+<!--          caption = "자료: 통계청 거주지역별 주택소유 및 무주택 가구수") -->
+
+<!-- ragg::agg_jpeg("images/re_sido_g.jpeg", width = 10, height = 7, units = "in", res = 300) -->
+<!-- re_sido_g -->
+<!-- dev.off() -->
+<!-- ``` -->
+
+<!-- ### 지도 -->
+
+<!-- ```{r} -->
+<!-- library(leaflet) -->
+<!-- library(sf) -->
+<!-- library(tidyverse) -->
+<!-- library(RColorBrewer) -->
+
+<!-- sf_use_s2(FALSE) -->
+
+<!-- re_tbl <-  -->
+<!--   read_csv("data/re_자가비율_시도.csv") -->
+
+<!-- # 시도별 폴리곤 데이터 준비 -->
+<!-- sido_sf <- bitSpatial::admi %>% -->
+<!--   group_by(mega_nm) %>% -->
+<!--   summarise(geometry = st_union(geometry)) |>  -->
+<!--   mutate(mega_nm = ifelse(str_detect(mega_nm, "강원"), "강원도", mega_nm))  -->
+
+<!-- # 지도 그리기 -->
+<!-- map_data <- re_tbl %>% -->
+<!--   filter(연도 == max(연도)) %>% -->
+<!--   select(시도, 자가비율) %>% -->
+<!--   left_join(sido_sf, by = c("시도" = "mega_nm")) %>% -->
+<!--   st_as_sf()  # sf 객체로 변환 -->
+
+<!-- # 색상 팔레트 생성 -->
+<!-- pal <- colorNumeric( -->
+<!--   palette = "YlOrRd", -->
+<!--   domain = map_data$자가비율 -->
+<!-- ) -->
+
+<!-- # 지도 생성 -->
+<!-- re_sido_m <- leaflet(map_data) %>% -->
+<!--   addTiles() %>% -->
+<!--   addPolygons( -->
+<!--     fillColor = ~pal(자가비율), -->
+<!--     weight = 1.5, -->
+<!--     opacity = 0.5, -->
+<!--     color = "white", -->
+<!--     dashArray = "3", -->
+<!--     fillOpacity = 0.7, -->
+<!--     highlight = highlightOptions( -->
+<!--       weight = 1.5, -->
+<!--       color = "#666", -->
+<!--       dashArray = "", -->
+<!--       fillOpacity = 0.7, -->
+<!--       bringToFront = TRUE), -->
+<!--     label = ~lapply(sprintf( -->
+<!--       "<strong>%s</strong><br/>자가비율: %2.1f%%", -->
+<!--       시도, 100 * 자가비율 -->
+<!--     ), htmltools::HTML), -->
+<!--     labelOptions = labelOptions( -->
+<!--       style = list("font-weight" = "normal", padding = "3px 8px"), -->
+<!--       textsize = "15px", -->
+<!--       direction = "auto", -->
+<!--       sticky = TRUE -->
+<!--     ), -->
+<!--     popup = ~paste0("<strong>", 시도, "</strong><br>자가비율: ",  -->
+<!--                     sprintf("%2.1f%%", 100 * 자가비율)) -->
+<!--   ) %>% -->
+<!--   addLegend( -->
+<!--     pal = pal,  -->
+<!--     values = ~자가비율, -->
+<!--     labFormat = labelFormat( -->
+<!--       prefix = "", -->
+<!--       suffix = "%", -->
+<!--       transform = function(x) 100 * x -->
+<!--     ), -->
+<!--     opacity = 0.7,  -->
+<!--     title = "자가비율", -->
+<!--     position = "bottomright" -->
+<!--   ) -->
+
+<!-- library(htmlwidgets) -->
+<!-- saveWidget(re_sido_m, file="data/re_sido_m.html", selfcontained = TRUE) -->
+<!-- ``` -->
+
+
+
+:::{.column-body-outset}
+
+<iframe src="data/re_sido_m.html" width="120%" height="800px"></iframe>
+
+:::
+
+## 시군구 자가비율
+
+<!-- ### 데이터 (X) -->
+
+<!-- ```{r} -->
+<!-- library(kosis) -->
+<!-- library(tidyverse) -->
+<!-- library(httr2) -->
+<!-- library(rversions) -->
+
+<!-- httr2::curl_translate("curl https://kosis.kr/openapi/Param/statisticsParameterData.do?method=getList&apiKey=인증키없음&itmId=T001+T002+T003+&objL1=ALL&objL2=&objL3=&objL4=&objL5=&objL6=&objL7=&objL8=&format=json&jsonVD=Y&prdSe=Y&startPrdDe=2022&endPrdDe=2016&orgId=101&tblId=DT_1OH0402") -->
+
+<!-- # KOSIS API 요청 스크립트 (업데이트됨) -->
+
+<!-- library(httr2) -->
+<!-- library(jsonlite) -->
+
+<!-- get_kosis_sigun <- function() { -->
+<!--   request("https://kosis.kr/openapi/Param/statisticsParameterData.do") |>  -->
+<!--     req_url_query( -->
+<!--       method = "getList", -->
+<!--       apiKey = Sys.getenv("KOSIS_API_KEY"), -->
+<!--       itmId = "T001+T002+T003+", -->
+<!--       objL1 = "ALL", -->
+<!--       objL2 = "", -->
+<!--       objL3 = "", -->
+<!--       objL4 = "", -->
+<!--       objL5 = "", -->
+<!--       objL6 = "", -->
+<!--       objL7 = "", -->
+<!--       objL8 = "", -->
+<!--       format = "json", -->
+<!--       jsonVD = "Y", -->
+<!--       prdSe = "Y", -->
+<!--       startPrdDe = "2022", -->
+<!--       endPrdDe = "2016", -->
+<!--       orgId = "101", -->
+<!--       tblId = "DT_1OH0402", -->
+<!--     ) |>  -->
+<!--     req_perform() -->
+
+<!--   return(resp) -->
+<!-- } -->
+
+<!-- sgg_response <- get_kosis_sigun() -->
+
+<!-- sgg_response_text <- resp_body_string(sgg_response) -->
+<!-- re_sgg <- fromJSON(sgg_response_text) -->
+
+<!-- sgg_raw <- as.data.frame(re_sgg) -->
+<!-- print(head(sgg_raw))  # 처음 몇 행 출력 -->
+
+<!-- sgg_raw |>  -->
+<!--   janitor::clean_names() |>  -->
+<!--   as_tibble() |>  -->
+<!--   glimpse() -->
+
+<!-- re_raw |>  -->
+<!--   janitor::clean_names() |>    -->
+<!--   as_tibble() |>  -->
+<!--   dplyr::select(연도 = prd_de, 시도 = c1_nm, 구분 = itm_nm, 값 = dt) |> count(시도)  -->
+
+<!--   filter(!str_detect(구분, "총 가구")) |>  -->
+<!--   mutate(연도 = as.integer(연도), -->
+<!--          값 = as.integer(값)) |>  -->
+<!--   pivot_wider(names_from = 구분, values_from = 값) |> -->
+<!--   mutate(자가비율 = `주택소유 가구` / (`주택소유 가구` + `무주택 가구`)) |>  -->
+<!--   group_by(시도) |> -->
+<!--   mutate(평균자가비율 = mean(자가비율, na.rm = TRUE)) |> -->
+<!--   ungroup() |> -->
+<!--   mutate(시도 = reorder(시도, 평균자가비율))  -->
+
+<!-- # re_tbl |>  -->
+<!-- #   write_csv("data/re_자가비율_시도.csv") -->
+<!-- ``` -->
+
+<!-- ### 데이터 (O) -->
+
+<!-- ```{r} -->
+<!-- library(readxl) -->
+
+<!-- re_sgg_raw <- read_excel("data/거주지역별_주택소유_및_무주택_가구수_20240625105527.xlsx", sheet = "데이터") -->
+
+<!-- re_sgg_tbl <- re_sgg_raw |>  -->
+<!--   janitor::clean_names(ascii = FALSE) |>  -->
+<!--   as_tibble() |>  -->
+<!--   rename(시도 = 거주지역별_1, -->
+<!--          시군구 = 거주지역별_2, -->
+<!--          연도 = 시점) |>  -->
+<!--   mutate(자가비율 = 주택소유_가구 / (주택소유_가구 + 무주택_가구)) |>  -->
+<!--   select(연도, 시도, 시군구, 자가비율) |>  -->
+<!--   filter(시군구 != "소계")  -->
+
+<!-- re_sgg_tbl |>  -->
+<!--   write_csv("data/re_자가비율_시군구.csv") -->
+
+<!-- ``` -->
+
+<!-- ### 그래프 -->
+
+<!-- ```{r} -->
+<!-- re_sgg_tbl <-   -->
+<!--   read_csv("data/re_자가비율_시군구.csv") -->
+
+<!-- re_sgg_sorted <- re_sgg_tbl |>  -->
+<!--   group_by(시도, 시군구) |> -->
+<!--   mutate(평균자가비율 = mean(자가비율, na.rm = TRUE)) |> -->
+<!--   ungroup() -->
+
+<!-- top_five_sgg <- re_sgg_sorted |>  -->
+<!--   filter(연도 == max(연도)) |>  -->
+<!--   slice_max(평균자가비율, n = 5) |>  -->
+<!--   select(시도, 시군구) |>  -->
+<!--   mutate(구분 = "상위 5개") -->
+
+
+<!-- bottom_five_sgg <- re_sgg_sorted |>  -->
+<!--   filter(연도 == max(연도)) |>  -->
+<!--   slice_min(평균자가비율, n = 5) |>  -->
+<!--   select(시도, 시군구) |>  -->
+<!--   mutate(구분 = "하위 5개") -->
+
+<!-- top_bottom_five_sgg <- bind_rows(top_five_sgg, bottom_five_sgg) -->
+
+<!-- re_sgg_g <- re_sgg_tbl |>  -->
+<!--   left_join(top_bottom_five_sgg) |> -->
+<!--   filter(!is.na(구분)) |>  -->
+<!--   mutate(시군구 = fct_reorder(시군구, 자가비율)) |> -->
+<!--   ggplot(aes(x = 연도, y = 자가비율, color = 구분)) + -->
+<!--     geom_line() + -->
+<!--     geom_point() + -->
+<!--     scale_y_continuous(labels = scales::percent_format(accuracy = 1)) + -->
+<!--     facet_wrap(~시군구, scales = "fixed", ncol = 5) + -->
+<!--     theme(legend.position = "none", -->
+<!--           axis.text.x = element_text(angle = 45, hjust = 1), -->
+<!--           strip.text = element_text(face = "bold")) + -->
+<!--     labs(title = "자가비율 상하위 5개 시군구 자가비율 추이", -->
+<!--          x = NULL, -->
+<!--          y = "자가비율",  -->
+<!--          caption = "자료: 통계청 거주지역별 주택소유 및 무주택 가구수") + -->
+<!--     scale_color_manual(values = c("상위 5개" = "red", "하위 5개" = "blue"))  -->
+
+<!-- ragg::agg_jpeg("images/re_sgg_g.jpeg", width = 10, height = 7, units = "in", res = 300) -->
+<!-- re_sgg_g -->
+<!-- dev.off() -->
+<!-- ``` -->
+
+<!-- ### 지도 -->
+
+<!-- ```{r} -->
+<!-- library(leaflet) -->
+<!-- library(sf) -->
+<!-- library(tidyverse) -->
+<!-- library(RColorBrewer) -->
+
+<!-- sf_use_s2(FALSE) -->
+
+<!-- re_sgg_tbl <-   -->
+<!--   read_csv("data/re_자가비율_시군구.csv") -->
+
+<!-- # 시도별 폴리곤 데이터 준비 -->
+<!-- sido_sf <- bitSpatial::admi %>% -->
+<!--   group_by(mega_nm) %>% -->
+<!--   summarise(geometry = st_union(geometry)) |>  -->
+<!--   mutate(mega_nm = ifelse(str_detect(mega_nm, "강원"), "강원도", mega_nm))  -->
+
+<!-- # 시군구 폴리곤 데이터 준비 -->
+<!-- sgg_sf <- bitSpatial::admi %>% -->
+<!--   mutate(mega_nm = ifelse(str_detect(mega_nm, "강원"), "강원도", mega_nm))  -->
+
+<!-- sgg_re_sf <- sgg_sf |> -->
+<!--   separate(cty_nm, into = c("cty_nm", "구분"), sep = " ") |> -->
+<!--   group_by(mega_nm, cty_nm) |> -->
+<!--   summarise(geometry = st_union(geometry)) |>  -->
+<!--   ungroup() |>  -->
+<!--   left_join(re_sgg_tbl |> filter(연도 == max(연도)), by = c("mega_nm" = "시도", "cty_nm" = "시군구")) -->
+
+<!-- # 색상 팔레트 생성 -->
+<!-- pal <- colorNumeric( -->
+<!--   palette = "YlOrRd", -->
+<!--   domain = sgg_re_sf$자가비율 -->
+<!-- ) -->
+
+<!-- # 지도 생성 -->
+<!-- re_sgg_m <- leaflet(sgg_re_sf) %>% -->
+<!--   addTiles() %>% -->
+<!--   addPolygons( -->
+<!--     fillColor = ~pal(자가비율), -->
+<!--     weight = 1.5, -->
+<!--     opacity = 0.5, -->
+<!--     color = "white", -->
+<!--     dashArray = "3", -->
+<!--     fillOpacity = 0.7, -->
+<!--     highlight = highlightOptions( -->
+<!--       weight = 1.5, -->
+<!--       color = "#666", -->
+<!--       dashArray = "", -->
+<!--       fillOpacity = 0.7, -->
+<!--       bringToFront = TRUE), -->
+<!--     label = ~lapply(sprintf( -->
+<!--       "<strong>%s</strong><br/>자가비율: %2.1f%%", -->
+<!--       paste0(mega_nm, " ", cty_nm), 100 * 자가비율 -->
+<!--     ), htmltools::HTML), -->
+<!--     labelOptions = labelOptions( -->
+<!--       style = list("font-weight" = "normal", padding = "3px 8px"), -->
+<!--       textsize = "15px", -->
+<!--       direction = "auto", -->
+<!--       sticky = TRUE -->
+<!--     ), -->
+<!--     popup = ~paste0("<strong>", mega_nm, " ", cty_nm, "</strong><br>자가비율: ",  -->
+<!--                     sprintf("%2.1f%%", 100 * 자가비율)) -->
+<!--   ) %>% -->
+<!--   addPolylines( -->
+<!--     data = sido_sf, -->
+<!--     weight = 5, -->
+<!--     opacity = 1, -->
+<!--     color = "black" -->
+<!--   ) %>% -->
+<!--   addLegend( -->
+<!--     pal = pal,  -->
+<!--     values = ~자가비율, -->
+<!--     labFormat = labelFormat( -->
+<!--       prefix = "", -->
+<!--       suffix = "%", -->
+<!--       transform = function(x) 100 * x -->
+<!--     ), -->
+<!--     opacity = 0.7,  -->
+<!--     title = "자가비율", -->
+<!--     position = "bottomright" -->
+<!--   ) -->
+
+<!-- library(htmlwidgets) -->
+<!-- saveWidget(re_sgg_m, file="data/re_sgg_m.html", selfcontained = TRUE) -->
+<!-- ``` -->
+
+
+
+:::{.column-body-outset}
+
+<iframe src="data/re_sgg_m.html" width="120%" height="800px"></iframe>
+
+:::
+

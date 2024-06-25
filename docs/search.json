@@ -228,5 +228,38 @@
       "총선",
       "제22대 총선"
     ]
+  },
+  {
+    "objectID": "real_estate.html",
+    "href": "real_estate.html",
+    "title": "",
+    "section": "",
+    "text": "부동산자가비율 코드",
+    "crumbs": [
+      "부동산",
+      "자가비율"
+    ]
+  },
+  {
+    "objectID": "real_estate.html#시도별-자가비율",
+    "href": "real_estate.html#시도별-자가비율",
+    "title": "",
+    "section": "시도별 자가비율",
+    "text": "시도별 자가비율",
+    "crumbs": [
+      "부동산",
+      "자가비율"
+    ]
+  },
+  {
+    "objectID": "real_estate.html#시군구-자가비율",
+    "href": "real_estate.html#시군구-자가비율",
+    "title": "",
+    "section": "시군구 자가비율",
+    "text": "시군구 자가비율",
+    "crumbs": [
+      "부동산",
+      "자가비율"
+    ]
   }
 ]
