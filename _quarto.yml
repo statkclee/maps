@@ -33,6 +33,7 @@ website:
       - section: "인구통계"
         contents:
           - demographics.qmd
+          - soho.qmd
       - section: "지선"
         contents:
           - local.qmd
