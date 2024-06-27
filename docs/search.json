@@ -261,5 +261,71 @@
       "부동산",
       "자가비율"
     ]
+  },
+  {
+    "objectID": "soho.html",
+    "href": "soho.html",
+    "title": "",
+    "section": "",
+    "text": "인구통계소상공인 코드소상공인\n\n소상공인시장진흥공단, 소상공인 통계\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n시도 (2021년 기준)\n\n\n\n\n시군구 (2021년 기준)",
+    "crumbs": [
+      "인구통계",
+      "소상공인"
+    ]
+  },
+  {
+    "objectID": "soho.html#대분류",
+    "href": "soho.html#대분류",
+    "title": "",
+    "section": "대분류",
+    "text": "대분류",
+    "crumbs": [
+      "인구통계",
+      "소상공인"
+    ]
+  },
+  {
+    "objectID": "soho.html#년-기준",
+    "href": "soho.html#년-기준",
+    "title": "",
+    "section": "2021년 기준",
+    "text": "2021년 기준",
+    "crumbs": [
+      "인구통계",
+      "소상공인"
+    ]
+  },
+  {
+    "objectID": "soho.html#데이터-1",
+    "href": "soho.html#데이터-1",
+    "title": "",
+    "section": "데이터",
+    "text": "데이터\n\n#&gt; c(\"시도\", \"시군구\", \"대분류\", \"기업수\", \"...5\", \"...6\", \n#&gt; \"종사자수\", \"...8\", \"...9\", \"매출액\", \"...11\", \"...12\"\n#&gt; )\n#&gt; c(NA, NA, NA, \"2019년\", \"2020년\", \"2021년\", \"2019년\", \"2020년\", \n#&gt; \"2021년\", \"2019년\", \"2020년\", \"2021년\")",
+    "crumbs": [
+      "인구통계",
+      "소상공인"
+    ]
+  },
+  {
+    "objectID": "soho.html#지도데이터",
+    "href": "soho.html#지도데이터",
+    "title": "",
+    "section": "지도데이터",
+    "text": "지도데이터",
+    "crumbs": [
+      "인구통계",
+      "소상공인"
+    ]
+  },
+  {
+    "objectID": "soho.html#지도-시각화",
+    "href": "soho.html#지도-시각화",
+    "title": "",
+    "section": "지도 시각화",
+    "text": "지도 시각화",
+    "crumbs": [
+      "인구통계",
+      "소상공인"
+    ]
   }
 ]

@@ -34,6 +34,9 @@ website:
         contents:
           - demographics.qmd
           - soho.qmd
+      - section: "부동산"
+        contents:
+          - real_estate.qmd
       - section: "지선"
         contents:
           - local.qmd
@@ -46,9 +49,6 @@ website:
           - office.qmd
           - precinct.qmd
           - parliamentary.qmd
-      - section: "부동산"
-        contents:
-          - real_estate.qmd
 
   page-footer:
     center: |

@@ -6,273 +6,518 @@ editor_options:
   chunk_output_type: console
 ---
 
-# 자가비율
+# 소상공인
 
 > [소상공인시장진흥공단, 소상공인 통계](https://www.sbiz.or.kr/sup/bbs/list.do?mnucd=114&scBbsMngSn=4) 
 
 
-# 데이터
+<!-- # 데이터 -->
+
+<!-- ```{r} -->
+<!-- library(readxl) -->
+<!-- library(tidyverse) -->
+
+<!-- soho_sido <- read_excel("data/소상공인 기본통계(19-22).xlsx", sheet = "시도, 중분류(2019년-2021년)", skip = 1) -->
+
+<!-- # 칼럼명 조정 -->
+<!-- soho_sido_names <- soho_sido |>  -->
+<!--   names() |> dput() -->
+
+<!-- soho_sido_rownames <- soho_sido |>  -->
+<!--   janitor::row_to_names(row_number = 1) |>  -->
+<!--   names() |> dput() -->
+
+<!-- # 칼럼명 반영 -->
+<!-- soho_sido_tbl <- soho_sido |>  -->
+<!--   set_names(c(soho_sido_names[1:3], soho_sido_rownames[4:length(soho_sido_rownames)])) |>  -->
+<!--   janitor::clean_names(ascii = FALSE) |>  -->
+<!--   rename_with( -->
+<!--     ~ case_when( -->
+<!--       . %in% c("x2020년", "x2021년", "x2019년") ~ paste0("기업수_", sub("x", "", sub("년", "", .))), -->
+<!--       endsWith(., "_2") ~ paste0("종사자수_", sub("x", "", sub("년_2", "", .))), -->
+<!--       endsWith(., "_3") ~ paste0("매출_", sub("x", "", sub("년_3", "", .))), -->
+<!--       TRUE ~ . -->
+<!--     ) -->
+<!--   ) |>  -->
+<!--   filter(!is.na(지역))  |>  -->
+<!--   mutate(across(기업수_2019:매출_2021, as.numeric)) |>  -->
+<!--   filter(지역 != "전국") |> -->
+<!--   filter(대분류 != "전산업") |>  -->
+<!--   filter(중분류 != "소계")   -->
+
+<!-- ``` -->
+
+<!-- # 시각화 -->
+
+<!-- ```{r} -->
+<!-- #| eval: false -->
+<!-- # 필요한 라이브러리 설치 및 불러오기 -->
+<!-- library(treemapify) -->
+
+<!-- # 대분류 relabeling 함수 -->
+<!-- relabel_대분류 <- function(x) { -->
+<!--   case_when( -->
+<!--     x == "A.농업, 임업 및 어업(01~03)" ~ "농림어업", -->
+<!--     x == "B.광업(05~08)" ~ "광업", -->
+<!--     x == "C.제조업(10~34)" ~ "제조업", -->
+<!--     x == "D.전기, 가스, 증기 및 공기 조절 공급업(35)" ~ "전기가스", -->
+<!--     x == "E.수도, 하수 및 폐기물 처리, 원료 재생업(36~39)" ~ "수도폐기", -->
+<!--     x == "F.건설업(41~42)" ~ "건설업", -->
+<!--     x == "G.도매 및 소매업(45~47)" ~ "도소매업", -->
+<!--     x == "H.운수 및 창고업(49~52)" ~ "운수창고", -->
+<!--     x == "I.숙박 및 음식점업(55~56)" ~ "숙박음식", -->
+<!--     x == "J.정보통신업(58~63)" ~ "정보통신", -->
+<!--     x == "K.금융 및 보험업(64~66)" ~ "금융보험", -->
+<!--     x == "L.부동산업(68)" ~ "부동산", -->
+<!--     x == "M.전문, 과학 및 기술 서비스업(70~73)" ~ "전문과학", -->
+<!--     x == "N.사업시설 관리, 사업 지원 및 임대 서비스업(74~76)" ~ "사업지원", -->
+<!--     x == "P.교육 서비스업(85)" ~ "교육", -->
+<!--     x == "Q.보건업 및 사회복지 서비스업(86~87)" ~ "보건복지", -->
+<!--     x == "R.예술, 스포츠 및 여가관련 서비스업(90~91)" ~ "예술여가", -->
+<!--     x == "S.수리 및 기타 개인 서비스업(94~96)" ~ "개인서비스", -->
+<!--     TRUE ~ x  # 기본값: 원래 값 유지 -->
+<!--   ) -->
+<!-- } -->
+
+<!-- # 중분류 relabeling 함수 -->
+<!-- relabel_중분류 <- function(x) { -->
+<!--   case_when( -->
+<!--     x == "01.농업" ~ "농업", -->
+<!--     x == "02.임업" ~ "임업", -->
+<!--     x == "03.어업" ~ "어업", -->
+<!--     x == "05.석탄, 원유 및 천연가스 광업" ~ "석탄광업", -->
+<!--     x == "06.금속 광업" ~ "금속광업", -->
+<!--     x == "07.비금속광물 광업; 연료용 제외" ~ "비금속광", -->
+<!--     x == "08.광업 지원 서비스업" ~ "광업지원", -->
+<!--     x == "10.식료품 제조업" ~ "식료품", -->
+<!--     x == "11.음료 제조업" ~ "음료", -->
+<!--     x == "12.담배 제조업" ~ "담배", -->
+<!--     x == "13.섬유제품 제조업; 의복 제외" ~ "섬유", -->
+<!--     x == "14.의복, 의복 액세서리 및 모피제품 제조업" ~ "의복", -->
+<!--     x == "15.가죽, 가방 및 신발 제조업" ~ "가죽신발", -->
+<!--     x == "16.목재 및 나무제품 제조업; 가구 제외" ~ "목재", -->
+<!--     x == "17.펄프, 종이 및 종이제품 제조업" ~ "종이", -->
+<!--     x == "18.인쇄 및 기록매체 복제업" ~ "인쇄", -->
+<!--     x == "19.코크스, 연탄 및 석유정제품 제조업" ~ "석유정제", -->
+<!--     x == "20.화학 물질 및 화학제품 제조업; 의약품 제외" ~ "화학", -->
+<!--     x == "21.의료용 물질 및 의약품 제조업" ~ "의약품", -->
+<!--     x == "22.고무 및 플라스틱제품 제조업" ~ "고무플라", -->
+<!--     x == "23.비금속 광물제품 제조업" ~ "비금속", -->
+<!--     x == "24.1차 금속 제조업" ~ "1차금속", -->
+<!--     x == "25.금속 가공제품 제조업; 기계 및 가구 제외" ~ "금속가공", -->
+<!--     x == "26.전자 부품, 컴퓨터, 영상, 음향 및 통신장비 제조업" ~ "전자부품", -->
+<!--     x == "27.의료, 정밀, 광학 기기 및 시계 제조업" ~ "의료기기", -->
+<!--     x == "28.전기장비 제조업" ~ "전기장비", -->
+<!--     x == "29.기타 기계 및 장비 제조업" ~ "기계장비", -->
+<!--     x == "30.자동차 및 트레일러 제조업" ~ "자동차", -->
+<!--     x == "31.기타 운송장비 제조업" ~ "운송장비", -->
+<!--     x == "32.가구 제조업" ~ "가구", -->
+<!--     x == "33.기타 제품 제조업" ~ "기타제조", -->
+<!--     x == "34.산업용 기계 및 장비 수리업" ~ "기계수리", -->
+<!--     x == "35.전기, 가스, 증기 및 공기 조절 공급업" ~ "전기가스", -->
+<!--     x == "36.수도업" ~ "수도", -->
+<!--     x == "37.하수, 폐수 및 분뇨 처리업" ~ "하수처리", -->
+<!--     x == "38.폐기물 수집, 운반, 처리 및 원료 재생업" ~ "폐기물", -->
+<!--     x == "39.환경 정화 및 복원업" ~ "환경정화", -->
+<!--     x == "41.종합 건설업" ~ "종합건설", -->
+<!--     x == "42.전문직별 공사업" ~ "전문건설", -->
+<!--     x == "45.자동차 및 부품 판매업" ~ "자동차판", -->
+<!--     x == "46.도매 및 상품 중개업" ~ "도매", -->
+<!--     x == "47.소매업; 자동차 제외" ~ "소매", -->
+<!--     x == "49.육상 운송 및 파이프라인 운송업" ~ "육상운송", -->
+<!--     x == "50.수상 운송업" ~ "수상운송", -->
+<!--     x == "51.항공 운송업" ~ "항공운송", -->
+<!--     x == "52.창고 및 운송관련 서비스업" ~ "창고운송", -->
+<!--     x == "55.숙박업" ~ "숙박", -->
+<!--     x == "56.음식점 및 주점업" ~ "음식점", -->
+<!--     x == "58.출판업" ~ "출판", -->
+<!--     x == "59.영상ㆍ오디오 기록물 제작 및 배급업" ~ "영상제작", -->
+<!--     x == "60.방송업" ~ "방송", -->
+<!--     x == "61.우편 및 통신업" ~ "통신", -->
+<!--     x == "62.컴퓨터 프로그래밍, 시스템 통합 및 관리업" ~ "IT서비스", -->
+<!--     x == "63.정보서비스업" ~ "정보서비", -->
+<!--     x == "64.금융업" ~ "금융", -->
+<!--     x == "65.보험 및 연금업" ~ "보험연금", -->
+<!--     x == "66.금융 및 보험관련 서비스업" ~ "금융서비", -->
+<!--     x == "68.부동산업" ~ "부동산", -->
+<!--     x == "70.연구개발업" ~ "연구개발", -->
+<!--     x == "71.전문 서비스업" ~ "전문서비", -->
+<!--     x == "72.건축 기술, 엔지니어링 및 기타 과학기술 서비스업" ~ "건축공학", -->
+<!--     x == "73.기타 전문, 과학 및 기술 서비스업" ~ "기타과학", -->
+<!--     x == "74.사업시설 관리 및 조경 서비스업" ~ "사업관리", -->
+<!--     x == "75.사업 지원 서비스업" ~ "사업지원", -->
+<!--     x == "76.임대업; 부동산 제외" ~ "임대", -->
+<!--     x == "85.교육 서비스업" ~ "교육", -->
+<!--     x == "86.보건업" ~ "보건", -->
+<!--     x == "87.사회복지 서비스업" ~ "사회복지", -->
+<!--     x == "90.창작, 예술 및 여가관련 서비스업" ~ "예술여가", -->
+<!--     x == "91.스포츠 및 오락관련 서비스업" ~ "스포츠", -->
+<!--     x == "95.개인 및 소비용품 수리업" ~ "개인수리", -->
+<!--     x == "96.기타 개인 서비스업" ~ "개인서비", -->
+<!--     TRUE ~ x  # 기본값: 원래 값 유지 -->
+<!--   ) -->
+<!-- } -->
+
+<!-- # 데이터프레임에 적용 -->
+
+<!-- sido_treemap_tbl <- soho_sido_tbl |>  -->
+<!--   filter(지역 == "전국") |> -->
+<!--   filter(대분류 != "전산업", 지역 == "전국") |>  -->
+<!--   filter(중분류 != "소계") |>  -->
+<!--   select(대분류, 중분류, 종사자수_2021) |>  -->
+<!--   mutate( -->
+<!--     대분류 = relabel_대분류(대분류), -->
+<!--     중분류 = relabel_중분류(중분류) -->
+<!--   ) -->
+
+
+<!-- sido_treemap_tbl |> -->
+<!--   ggplot(aes(area = 종사자수_2021, label = 대분류, subgroup = 중분류)) + -->
+<!--   geom_treemap() + -->
+<!--   geom_treemap_subgroup_border() + -->
+<!--   geom_treemap_subgroup_text(place = "centre", grow = T, alpha = 0.5, colour = -->
+<!--                            "black", fontface = "italic", min.size = 0) + -->
+<!--   geom_treemap_text(fontface = "italic", colour = "white", place = "centre", -->
+<!--                     grow = TRUE) -->
+
+<!-- ``` -->
+
+<!-- ## 대분류 -->
+
+
+<!-- ```{r} -->
+<!-- #| eval: false -->
+<!-- library(dplyr) -->
+<!-- library(tidyr) -->
+<!-- library(ggplot2) -->
+
+<!-- # 대분류 재그룹화 함수 (10개 범주로 수정) -->
+<!-- regroup_대분류 <- function(x) { -->
+<!--   case_when( -->
+<!--     x == "C.제조업(10~34)" ~ "제조업", -->
+<!--     x %in% c("D.전기, 가스, 증기 및 공기 조절 공급업(35)",  -->
+<!--              "E.수도, 하수 및 폐기물 처리, 원료 재생업(36~39)") ~ "에너지/환경", -->
+<!--     x == "G.도매 및 소매업(45~47)" ~ "도소매업", -->
+<!--     x == "I.숙박 및 음식점업(55~56)" ~ "숙박음식업", -->
+<!--     x == "H.운수 및 창고업(49~52)" ~ "운수창고업", -->
+<!--     x == "J.정보통신업(58~63)" ~ "정보통신업", -->
+<!--     x == "L.부동산업(68)" ~ "부동산업", -->
+<!--     x %in% c("M.전문, 과학 및 기술 서비스업(70~73)",  -->
+<!--              "N.사업시설 관리, 사업 지원 및 임대 서비스업(74~76)") ~ "전문/사업서비스", -->
+<!--     x %in% c("P.교육 서비스업(85)", "Q.보건업 및 사회복지 서비스업(86~87)") ~ "교육/보건복지", -->
+<!--     x == "F.건설업(41~42)" ~ "건설업" -->
+<!--   ) -->
+<!-- } -->
+
+<!-- # 데이터 처리 및 시각화 -->
+<!-- soho_sido_tbl |>  -->
+<!--   filter(지역 == "전국") |> -->
+<!--   filter(대분류 != "전산업", 지역 == "전국") |>  -->
+<!--   filter(중분류 != "소계") |>  -->
+<!--   select(-지역, -중분류) |>  -->
+<!--   mutate(대분류 = regroup_대분류(대분류)) |>  # 대분류 재그룹화 적용 -->
+<!--   group_by(대분류) |> -->
+<!--   summarise(across(where(is.numeric), sum)) |>  -->
+<!--   pivot_longer(-대분류, names_to = "year", values_to = "value") |>  -->
+<!--   separate(year, into = c("구분", "연도"), sep = "_")  |>  -->
+<!--   filter(구분 != "기업수", -->
+<!--          연도 == max(연도)) |>  -->
+<!--   ggplot(aes(x = fct_reorder(대분류, value, .desc = TRUE), y = value)) + -->
+<!--     geom_segment(aes(xend = 대분류, yend = 0), color = "gray") + -->
+<!--     geom_point(size = 3, color = "blue") + -->
+<!--     facet_wrap(~구분, scales = "free_y") + -->
+<!--     scale_y_continuous(labels = scales::comma) + -->
+<!--     theme_minimal() + -->
+<!--     labs(title = "대분류별 매출 및 종사자수 (최신 연도)", -->
+<!--          x = "대분류",  -->
+<!--          y = "값") + -->
+<!--     theme(axis.text.x = element_text(angle = 45, hjust = 1), -->
+<!--           panel.grid.major.x = element_blank(), -->
+<!--           panel.grid.minor.x = element_blank()) + -->
+<!--     coord_flip() -->
+
+<!-- ``` -->
+
+
+<!-- ## 2021년 기준 -->
+
+
+<!-- ```{r} -->
+<!-- #| eval: false -->
+<!-- # 데이터 처리 및 시각화 -->
+<!-- soho_sido_tbl |>  -->
+<!--   filter(지역 == "전국") |> -->
+<!--   filter(대분류 != "전산업", 지역 == "전국") |>  -->
+<!--   filter(중분류 != "소계") |>  -->
+<!--   select(-지역, -중분류) |>  -->
+<!--   mutate(대분류 = regroup_대분류(대분류)) |>  # 대분류 재그룹화 적용 -->
+<!--   group_by(대분류) |> -->
+<!--   summarise(across(where(is.numeric), sum)) |>  -->
+<!--   pivot_longer(-대분류, names_to = "year", values_to = "value") |>  -->
+<!--   separate(year, into = c("구분", "연도"), sep = "_")  |>  -->
+<!--   filter(구분 != "기업수", -->
+<!--          연도 == max(연도)) |>  -->
+<!--   ggplot(aes(x = fct_reorder(대분류, value, .desc = FALSE), y = value)) + -->
+<!--     geom_segment(aes(xend = 대분류, yend = 0), color = "gray") + -->
+<!--     geom_point(size = 3, color = "blue") + -->
+<!--     facet_wrap(~구분, scales = "free_y") + -->
+<!--     scale_y_continuous(labels = scales::comma) + -->
+<!--     theme_minimal() + -->
+<!--     labs(title = "대분류별 매출 및 종사자수 (최신 연도)", -->
+<!--          x = "대분류",  -->
+<!--          y = "값") + -->
+<!--     theme(axis.text.x = element_text(angle = 45, hjust = 1), -->
+<!--           panel.grid.major.x = element_blank(), -->
+<!--           panel.grid.minor.x = element_blank()) + -->
+<!--     coord_flip() -->
+<!-- ``` -->
+
+
+# 시도 (2021년 기준)
+
 
 ```{r}
-library(readxl)
-library(tidyverse)
+#| eval: false
+library(leaflet)
+library(sf)
+sf_use_s2(FALSE)
 
-soho_sido <- read_excel("data/소상공인 기본통계(19-22).xlsx", sheet = "시도, 중분류(2019년-2021년)", skip = 1)
-
-# 칼럼명 조정
-soho_sido_names <- soho_sido |> 
-  names() |> dput()
-
-soho_sido_rownames <- soho_sido |> 
-  janitor::row_to_names(row_number = 1) |> 
-  names() |> dput()
-
-# 칼럼명 반영
-soho_sido_tbl <- soho_sido |> 
-  set_names(c(soho_sido_names[1:3], soho_sido_rownames[4:length(soho_sido_rownames)])) |> 
-  janitor::clean_names(ascii = FALSE) |> 
-  rename_with(
-    ~ case_when(
-      . %in% c("x2020년", "x2021년", "x2019년") ~ paste0("기업수_", sub("x", "", sub("년", "", .))),
-      endsWith(., "_2") ~ paste0("종사자수_", sub("x", "", sub("년_2", "", .))),
-      endsWith(., "_3") ~ paste0("매출_", sub("x", "", sub("년_3", "", .))),
-      TRUE ~ .
-    )
-  ) |> 
-  filter(!is.na(지역))  |> 
-  mutate(across(기업수_2019:매출_2021, as.numeric)) 
-
-```
-
-# 시각화
-
-```{r}
-soho_sido_tbl |> 
-  filter(지역 == "전국") |>
-  filter(대분류 != "전산업", 지역 == "전국") |> 
-  filter(중분류 != "소계")  
-```
-
-
-```{r}
-# 필요한 라이브러리 설치 및 불러오기
-library(treemapify)
-
-# 대분류 relabeling 함수
-relabel_대분류 <- function(x) {
-  case_when(
-    x == "A.농업, 임업 및 어업(01~03)" ~ "농림어업",
-    x == "B.광업(05~08)" ~ "광업",
-    x == "C.제조업(10~34)" ~ "제조업",
-    x == "D.전기, 가스, 증기 및 공기 조절 공급업(35)" ~ "전기가스",
-    x == "E.수도, 하수 및 폐기물 처리, 원료 재생업(36~39)" ~ "수도폐기",
-    x == "F.건설업(41~42)" ~ "건설업",
-    x == "G.도매 및 소매업(45~47)" ~ "도소매업",
-    x == "H.운수 및 창고업(49~52)" ~ "운수창고",
-    x == "I.숙박 및 음식점업(55~56)" ~ "숙박음식",
-    x == "J.정보통신업(58~63)" ~ "정보통신",
-    x == "K.금융 및 보험업(64~66)" ~ "금융보험",
-    x == "L.부동산업(68)" ~ "부동산",
-    x == "M.전문, 과학 및 기술 서비스업(70~73)" ~ "전문과학",
-    x == "N.사업시설 관리, 사업 지원 및 임대 서비스업(74~76)" ~ "사업지원",
-    x == "P.교육 서비스업(85)" ~ "교육",
-    x == "Q.보건업 및 사회복지 서비스업(86~87)" ~ "보건복지",
-    x == "R.예술, 스포츠 및 여가관련 서비스업(90~91)" ~ "예술여가",
-    x == "S.수리 및 기타 개인 서비스업(94~96)" ~ "개인서비스",
-    TRUE ~ x  # 기본값: 원래 값 유지
-  )
-}
-
-# 중분류 relabeling 함수
-relabel_중분류 <- function(x) {
-  case_when(
-    x == "01.농업" ~ "농업",
-    x == "02.임업" ~ "임업",
-    x == "03.어업" ~ "어업",
-    x == "05.석탄, 원유 및 천연가스 광업" ~ "석탄광업",
-    x == "06.금속 광업" ~ "금속광업",
-    x == "07.비금속광물 광업; 연료용 제외" ~ "비금속광",
-    x == "08.광업 지원 서비스업" ~ "광업지원",
-    x == "10.식료품 제조업" ~ "식료품",
-    x == "11.음료 제조업" ~ "음료",
-    x == "12.담배 제조업" ~ "담배",
-    x == "13.섬유제품 제조업; 의복 제외" ~ "섬유",
-    x == "14.의복, 의복 액세서리 및 모피제품 제조업" ~ "의복",
-    x == "15.가죽, 가방 및 신발 제조업" ~ "가죽신발",
-    x == "16.목재 및 나무제품 제조업; 가구 제외" ~ "목재",
-    x == "17.펄프, 종이 및 종이제품 제조업" ~ "종이",
-    x == "18.인쇄 및 기록매체 복제업" ~ "인쇄",
-    x == "19.코크스, 연탄 및 석유정제품 제조업" ~ "석유정제",
-    x == "20.화학 물질 및 화학제품 제조업; 의약품 제외" ~ "화학",
-    x == "21.의료용 물질 및 의약품 제조업" ~ "의약품",
-    x == "22.고무 및 플라스틱제품 제조업" ~ "고무플라",
-    x == "23.비금속 광물제품 제조업" ~ "비금속",
-    x == "24.1차 금속 제조업" ~ "1차금속",
-    x == "25.금속 가공제품 제조업; 기계 및 가구 제외" ~ "금속가공",
-    x == "26.전자 부품, 컴퓨터, 영상, 음향 및 통신장비 제조업" ~ "전자부품",
-    x == "27.의료, 정밀, 광학 기기 및 시계 제조업" ~ "의료기기",
-    x == "28.전기장비 제조업" ~ "전기장비",
-    x == "29.기타 기계 및 장비 제조업" ~ "기계장비",
-    x == "30.자동차 및 트레일러 제조업" ~ "자동차",
-    x == "31.기타 운송장비 제조업" ~ "운송장비",
-    x == "32.가구 제조업" ~ "가구",
-    x == "33.기타 제품 제조업" ~ "기타제조",
-    x == "34.산업용 기계 및 장비 수리업" ~ "기계수리",
-    x == "35.전기, 가스, 증기 및 공기 조절 공급업" ~ "전기가스",
-    x == "36.수도업" ~ "수도",
-    x == "37.하수, 폐수 및 분뇨 처리업" ~ "하수처리",
-    x == "38.폐기물 수집, 운반, 처리 및 원료 재생업" ~ "폐기물",
-    x == "39.환경 정화 및 복원업" ~ "환경정화",
-    x == "41.종합 건설업" ~ "종합건설",
-    x == "42.전문직별 공사업" ~ "전문건설",
-    x == "45.자동차 및 부품 판매업" ~ "자동차판",
-    x == "46.도매 및 상품 중개업" ~ "도매",
-    x == "47.소매업; 자동차 제외" ~ "소매",
-    x == "49.육상 운송 및 파이프라인 운송업" ~ "육상운송",
-    x == "50.수상 운송업" ~ "수상운송",
-    x == "51.항공 운송업" ~ "항공운송",
-    x == "52.창고 및 운송관련 서비스업" ~ "창고운송",
-    x == "55.숙박업" ~ "숙박",
-    x == "56.음식점 및 주점업" ~ "음식점",
-    x == "58.출판업" ~ "출판",
-    x == "59.영상ㆍ오디오 기록물 제작 및 배급업" ~ "영상제작",
-    x == "60.방송업" ~ "방송",
-    x == "61.우편 및 통신업" ~ "통신",
-    x == "62.컴퓨터 프로그래밍, 시스템 통합 및 관리업" ~ "IT서비스",
-    x == "63.정보서비스업" ~ "정보서비",
-    x == "64.금융업" ~ "금융",
-    x == "65.보험 및 연금업" ~ "보험연금",
-    x == "66.금융 및 보험관련 서비스업" ~ "금융서비",
-    x == "68.부동산업" ~ "부동산",
-    x == "70.연구개발업" ~ "연구개발",
-    x == "71.전문 서비스업" ~ "전문서비",
-    x == "72.건축 기술, 엔지니어링 및 기타 과학기술 서비스업" ~ "건축공학",
-    x == "73.기타 전문, 과학 및 기술 서비스업" ~ "기타과학",
-    x == "74.사업시설 관리 및 조경 서비스업" ~ "사업관리",
-    x == "75.사업 지원 서비스업" ~ "사업지원",
-    x == "76.임대업; 부동산 제외" ~ "임대",
-    x == "85.교육 서비스업" ~ "교육",
-    x == "86.보건업" ~ "보건",
-    x == "87.사회복지 서비스업" ~ "사회복지",
-    x == "90.창작, 예술 및 여가관련 서비스업" ~ "예술여가",
-    x == "91.스포츠 및 오락관련 서비스업" ~ "스포츠",
-    x == "95.개인 및 소비용품 수리업" ~ "개인수리",
-    x == "96.기타 개인 서비스업" ~ "개인서비",
-    TRUE ~ x  # 기본값: 원래 값 유지
-  )
-}
-
-# 데이터프레임에 적용
-
-sido_treemap_tbl <- soho_sido_tbl |> 
-  filter(지역 == "전국") |>
-  filter(대분류 != "전산업", 지역 == "전국") |> 
-  filter(중분류 != "소계") |> 
-  select(대분류, 중분류, 종사자수_2021) |> 
-  mutate(
-    대분류 = relabel_대분류(대분류),
-    중분류 = relabel_중분류(중분류)
-  )
+soho_sido_viz <- soho_sido_tbl |> 
+  mutate(지역 = str_extract(지역, "[가-힣]+")) |>
+  select(지역, contains("2021")) |> 
+  group_by(지역) |>
+  summarise_all(sum, na.rm = TRUE) |> 
+  rename(기업수 = 기업수_2021, 
+         종사자수 = 종사자수_2021, 
+         매출 = 매출_2021) |> 
+  arrange(지역)
   
 
-sido_treemap_tbl |>
-  ggplot(aes(area = 종사자수_2021, label = 대분류, subgroup = 중분류)) +
-  geom_treemap() +
-  geom_treemap_subgroup_border() +
-  geom_treemap_subgroup_text(place = "centre", grow = T, alpha = 0.5, colour =
-                           "black", fontface = "italic", min.size = 0) +
-  geom_treemap_text(fontface = "italic", colour = "white", place = "centre",
-                    grow = TRUE)
+soho_sido_sf <- bitSpatial::admi |> 
+  group_by(mega_nm) |> 
+  summarise(geometry = st_union(geometry)) |> 
+  arrange(mega_nm) |>  
+  bind_cols(soho_sido_viz) |> 
+  mutate(매출_조원 = 매출 / 10^4)
+
+
+# 새로운 구간 설정
+breaks <- c(0, 50, 300, Inf)
+
+# 색상 팔레트 생성
+pal <- colorBin("YlOrRd", domain = soho_sido_sf$매출_조원, bins = breaks)
+
+soho_sido_m <- soho_sido_sf %>% 
+  leaflet() %>% 
+  addProviderTiles(providers$CartoDB.Positron) %>%
+  addPolygons(
+    fillColor = ~pal(매출_조원),
+    fillOpacity = 0.7,
+    weight = 2,
+    color = "black",
+    dashArray = "1",
+    highlightOptions = highlightOptions(
+      weight = 5,
+      color = "#666",
+      dashArray = "",
+      fillOpacity = 0.7,
+      bringToFront = TRUE),
+    label = ~map(
+      str_glue(
+        "<strong>{mega_nm}</strong><br/>",
+        "&#9679; 기업수: {scales::comma(기업수)} 개<br/>",
+        "&#9679; 종사자: {scales::comma(종사자수)} 명<br/>",
+        "&#9679; 매  출: {scales::comma(매출_조원, accuracy = 0.1)} 조원<br/>"
+      ),htmltools::HTML),
+    labelOptions = labelOptions(
+      style = list("font-weight" = "normal", padding = "3px 8px"),
+      textsize = "15px",
+      direction = "auto")
+  ) %>% 
+  addLegend(
+    pal = pal,
+    values = ~매출_조원,
+    opacity = 0.7,
+    title = "매출 (조원)",
+    position = "bottomright",
+    labels = c("0-50", "51-300", "301 이상")
+  ) %>%
+  addMiniMap(
+    toggleDisplay = TRUE,
+    position = "bottomleft"
+  ) %>%
+  addScaleBar(position = "bottomleft") %>%
+  addEasyButton(easyButton(
+    icon = "fa-globe", title = "Zoom to Full View",
+    onClick = JS("function(btn, map){ map.setView([36.5, 127.5], 7); }")
+  ))
+
+library(htmlwidgets)
+saveWidget(soho_sido_m, file="data/soho_sido_m.html", selfcontained = TRUE)
 
 ```
 
-## 대분류
 
 
-```{r}
-library(dplyr)
-library(tidyr)
-library(ggplot2)
+:::{.column-body-outset}
 
-# 대분류 재그룹화 함수 (10개 범주로 수정)
-regroup_대분류 <- function(x) {
-  case_when(
-    x == "C.제조업(10~34)" ~ "제조업",
-    x %in% c("D.전기, 가스, 증기 및 공기 조절 공급업(35)", 
-             "E.수도, 하수 및 폐기물 처리, 원료 재생업(36~39)") ~ "에너지/환경",
-    x == "G.도매 및 소매업(45~47)" ~ "도소매업",
-    x == "I.숙박 및 음식점업(55~56)" ~ "숙박음식업",
-    x == "H.운수 및 창고업(49~52)" ~ "운수창고업",
-    x == "J.정보통신업(58~63)" ~ "정보통신업",
-    x == "L.부동산업(68)" ~ "부동산업",
-    x %in% c("M.전문, 과학 및 기술 서비스업(70~73)", 
-             "N.사업시설 관리, 사업 지원 및 임대 서비스업(74~76)") ~ "전문/사업서비스",
-    x %in% c("P.교육 서비스업(85)", "Q.보건업 및 사회복지 서비스업(86~87)") ~ "교육/보건복지",
-    x == "F.건설업(41~42)" ~ "건설업"
-  )
-}
+<iframe src="data/soho_sido_m.html" width="120%" height="800px"></iframe>
 
-# 데이터 처리 및 시각화
-soho_sido_tbl |> 
-  filter(지역 == "전국") |>
-  filter(대분류 != "전산업", 지역 == "전국") |> 
-  filter(중분류 != "소계") |> 
-  select(-지역, -중분류) |> 
-  mutate(대분류 = regroup_대분류(대분류)) |>  # 대분류 재그룹화 적용
-  group_by(대분류) |>
-  summarise(across(where(is.numeric), sum)) |> 
-  pivot_longer(-대분류, names_to = "year", values_to = "value") |> 
-  separate(year, into = c("구분", "연도"), sep = "_")  |> 
-  filter(구분 != "기업수",
-         연도 == max(연도)) |> 
-  ggplot(aes(x = fct_reorder(대분류, value, .desc = TRUE), y = value)) +
-    geom_segment(aes(xend = 대분류, yend = 0), color = "gray") +
-    geom_point(size = 3, color = "blue") +
-    facet_wrap(~구분, scales = "free_y") +
-    scale_y_continuous(labels = scales::comma) +
-    theme_minimal() +
-    labs(title = "대분류별 매출 및 종사자수 (최신 연도)",
-         x = "대분류", 
-         y = "값") +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1),
-          panel.grid.major.x = element_blank(),
-          panel.grid.minor.x = element_blank()) +
-    coord_flip()
-
-```
+:::
 
 
-## 2021년 기준
+# 시군구 (2021년 기준)
+
+<!-- ## 데이터 -->
+
+<!-- ```{r} -->
+<!-- #| eval: false -->
+<!-- library(readxl) -->
+<!-- library(tidyverse) -->
+
+<!-- soho_sgg <- read_excel("data/소상공인 기본통계(19-22).xlsx", sheet = "시군구, 대분류(2019년-2021년)", skip = 1) -->
+
+<!-- # 칼럼명 조정 -->
+<!-- soho_sgg_names <- soho_sgg |>  -->
+<!--   names() |> dput() -->
+
+<!-- soho_sgg_rownames <- soho_sgg |>  -->
+<!--   janitor::row_to_names(row_number = 1) |>  -->
+<!--   names() |> dput() -->
+
+<!-- # 칼럼명 반영 -->
+<!-- soho_sgg_tbl <- soho_sgg |>  -->
+<!--   set_names(c(soho_sgg_names[1:3], soho_sido_rownames[4:length(soho_sgg_rownames)])) |>  -->
+<!--   janitor::clean_names(ascii = FALSE) |>  -->
+<!--   rename_with( -->
+<!--     ~ case_when( -->
+<!--       . %in% c("x2020년", "x2021년", "x2019년") ~ paste0("기업수_", sub("x", "", sub("년", "", .))), -->
+<!--       endsWith(., "_2") ~ paste0("종사자수_", sub("x", "", sub("년_2", "", .))), -->
+<!--       endsWith(., "_3") ~ paste0("매출_", sub("x", "", sub("년_3", "", .))), -->
+<!--       TRUE ~ . -->
+<!--     ) -->
+<!--   ) |>  -->
+<!--   filter(!is.na(시도))  |>  -->
+<!--   mutate(across(기업수_2019:매출_2021, as.numeric)) |>  -->
+<!--   filter(시도 != "전국") |> -->
+<!--   filter(시군구 != "소계") |>  -->
+<!--   filter(대분류 == "전산업") |>  -->
+<!--   mutate(시도 = str_extract(시도, "[가-힣]+"))  -->
+
+<!-- ``` -->
 
 
-```{r}
-# 데이터 처리 및 시각화
-soho_sido_tbl |> 
-  filter(지역 == "전국") |>
-  filter(대분류 != "전산업", 지역 == "전국") |> 
-  filter(중분류 != "소계") |> 
-  select(-지역, -중분류) |> 
-  mutate(대분류 = regroup_대분류(대분류)) |>  # 대분류 재그룹화 적용
-  group_by(대분류) |>
-  summarise(across(where(is.numeric), sum)) |> 
-  pivot_longer(-대분류, names_to = "year", values_to = "value") |> 
-  separate(year, into = c("구분", "연도"), sep = "_")  |> 
-  filter(구분 != "기업수",
-         연도 == max(연도)) |> 
-  ggplot(aes(x = fct_reorder(대분류, value, .desc = FALSE), y = value)) +
-    geom_segment(aes(xend = 대분류, yend = 0), color = "gray") +
-    geom_point(size = 3, color = "blue") +
-    facet_wrap(~구분, scales = "free_y") +
-    scale_y_continuous(labels = scales::comma) +
-    theme_minimal() +
-    labs(title = "대분류별 매출 및 종사자수 (최신 연도)",
-         x = "대분류", 
-         y = "값") +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1),
-          panel.grid.major.x = element_blank(),
-          panel.grid.minor.x = element_blank()) +
-    coord_flip()
+<!-- ## 지도데이터 -->
 
-```
+
+<!-- ```{r} -->
+<!-- #| eval: false -->
+<!-- library(leaflet) -->
+<!-- library(sf) -->
+<!-- sf_use_s2(FALSE) -->
+
+<!-- soho_sgg_viz <- soho_sgg_tbl |>  -->
+<!--   select(시도, 시군구, contains("2021")) |>  -->
+<!--   group_by(시도, 시군구) |> -->
+<!--   summarise_all(sum, na.rm = TRUE) |>  -->
+<!--   rename(기업수 = 기업수_2021,  -->
+<!--          종사자수 = 종사자수_2021,  -->
+<!--          매출 = 매출_2021) |>  -->
+<!--   arrange(시도, 시군구)  -->
+
+<!-- soho_sgg_viz <- read_excel("data/소상공인_시군구_매칭.xlsx") -->
+
+<!-- soho_sgg_sf <- bitSpatial::admi |>  -->
+<!--   group_by(mega_nm, cty_nm) |>  -->
+<!--   summarise(geometry = st_union(geometry)) |>  -->
+<!--   arrange(mega_nm, cty_nm) |>  -->
+<!--   left_join(soho_sgg_viz) -->
+
+
+<!-- ``` -->
+
+<!-- ## 지도 시각화 -->
+
+
+<!-- ```{r} -->
+<!-- #| eval: false -->
+<!-- # 새로운 구간 설정 -->
+<!-- breaks <- c(0, 1, 3, 5, 10, 30, Inf) -->
+
+<!-- # 색상 팔레트 생성 -->
+<!-- pal <- colorBin("YlOrRd", domain = soho_sgg_sf$매출_조원, bins = breaks) -->
+
+<!-- # 새로운 구간 설정 -->
+<!-- breaks <- c(0, 1, 3, 5, 10, 30, Inf) -->
+
+<!-- # 색상 팔레트 생성 -->
+<!-- pal <- colorBin("YlOrRd", domain = soho_sgg_sf$매출_조원, bins = breaks) -->
+
+<!-- # 지도 생성 -->
+<!-- soho_sgg_m <- soho_sgg_sf %>%  -->
+<!--   leaflet() %>%  -->
+<!--   addProviderTiles(providers$CartoDB.Positron) %>% -->
+<!--   # 시도 경계 추가 (굵고 진한 선) -->
+<!--   addPolygons( -->
+<!--     data = soho_sido_sf, -->
+<!--     fillColor = "transparent", -->
+<!--     fillOpacity = 0, -->
+<!--     weight = 3, -->
+<!--     color = "black", -->
+<!--     dashArray = NULL -->
+<!--   ) %>%  -->
+<!--   # 시군구 경계 추가 (얇고 연한 선) -->
+<!--   addPolygons( -->
+<!--     fillColor = ~pal(매출_조원), -->
+<!--     fillOpacity = 0.7, -->
+<!--     weight = 0.5, -->
+<!--     color = "#666", -->
+<!--     dashArray = "3", -->
+<!--     highlightOptions = highlightOptions( -->
+<!--       weight = 3, -->
+<!--       color = "#666", -->
+<!--       dashArray = "", -->
+<!--       fillOpacity = 0.7, -->
+<!--       bringToFront = TRUE), -->
+<!--     label = ~map( -->
+<!--       str_glue( -->
+<!--         "<strong>{시도} {시군구}</strong><br/>", -->
+<!--         "&#9679; 기업수: {scales::comma(기업수)} 개<br/>", -->
+<!--         "&#9679; 종사자: {scales::comma(종사자수)} 명<br/>", -->
+<!--         "&#9679; 매  출: {scales::comma(매출_조원, accuracy = 0.1)} 조원<br/>" -->
+<!--       ),htmltools::HTML), -->
+<!--     labelOptions = labelOptions( -->
+<!--       style = list("font-weight" = "normal", padding = "3px 8px"), -->
+<!--       textsize = "15px", -->
+<!--       direction = "auto") -->
+<!--   ) %>%  -->
+<!--   addLegend( -->
+<!--     pal = pal, -->
+<!--     values = ~매출_조원, -->
+<!--     opacity = 0.7, -->
+<!--     title = "매출 (조원)", -->
+<!--     position = "bottomright", -->
+<!--     labels = c("0-50", "51-300", "301 이상") -->
+<!--   ) %>% -->
+<!--   addMiniMap( -->
+<!--     toggleDisplay = TRUE, -->
+<!--     position = "bottomleft" -->
+<!--   ) %>% -->
+<!--   addScaleBar(position = "bottomleft") %>% -->
+<!--   addEasyButton(easyButton( -->
+<!--     icon = "fa-globe", title = "Zoom to Full View", -->
+<!--     onClick = JS("function(btn, map){ map.setView([36.5, 127.5], 7); }") -->
+<!--   ))  -->
+
+<!-- library(htmlwidgets) -->
+<!-- saveWidget(soho_sgg_m, file="data/soho_sgg_m.html", selfcontained = TRUE) -->
+<!-- ``` -->
+
+
+:::{.column-body-outset}
+
+<iframe src="data/soho_sgg_m.html" width="120%" height="800px"></iframe>
+
+:::
 
 
